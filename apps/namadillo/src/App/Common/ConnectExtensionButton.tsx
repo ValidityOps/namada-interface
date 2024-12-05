@@ -6,7 +6,11 @@ import {
 import { useNamadaKeychain } from "hooks/useNamadaKeychain";
 import { useAtom, useAtomValue } from "jotai";
 
-export const ConnectExtensionButton = (): JSX.Element => {
+export const ConnectExtensionButton = ({
+  size = "sm",
+}: {
+  size?: "sm" | "md";
+}): JSX.Element => {
   const extensionAttachStatus = useAtomValue(namadaExtensionAttachStatus);
   const { connect } = useNamadaKeychain();
   const [connectStatus] = useAtom(namadaExtensionConnectionStatus);
@@ -30,7 +34,7 @@ export const ConnectExtensionButton = (): JSX.Element => {
           target="_blank"
           rel="nofollow noreferrer"
           backgroundColor="yellow"
-          size="sm"
+          size={size}
         >
           Download Keychain
         </ActionButton>

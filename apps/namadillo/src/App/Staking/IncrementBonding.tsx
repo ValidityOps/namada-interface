@@ -123,20 +123,6 @@ const IncrementBonding = ({
   })();
 
   return (
-    // <Modal onClose={onCloseModal}>
-    //   <ModalContainer
-    //     header={
-    //       <span className="flex items-center gap-3">
-    //         Select Validators to delegate your NAM{" "}
-    //         <Info>
-    //           Enter staking values across multiple validators. The total amount
-    //           should be less than the total NAM available in your account.
-    //           Please leave a small amount for transaction fees.
-    //         </Info>
-    //       </span>
-    //     }
-    //     onClose={onCloseModal}
-    //   >
     <form
       onSubmit={onSubmit}
       className="grid grid-rows-[max-content_auto_max-content] gap-2 h-full"
@@ -183,60 +169,66 @@ const IncrementBonding = ({
           amountInNam={0}
         />
       </div>
-      <Panel className="grid grid-rows-[max-content_auto] w-full relative overflow-hidden">
-        {validators.isSuccess && !initialFilter && (
-          <ValidatorFilterNav
-            validators={validators.data}
-            updatedAmountByAddress={updatedAmountByAddress}
-            stakedAmountByAddress={stakedAmountByAddress}
-            onChangeSearch={(value: string) => setFilter(value)}
-            onlyMyValidators={onlyMyValidators}
-            onFilterByMyValidators={setOnlyMyValidators}
-            validatorFilter={validatorFilter}
-            onChangeValidatorFilter={setValidatorFilter}
-          />
-        )}
-        {(validators.isLoading || myValidators.isLoading) && (
-          <div className="mt-3">
-            <TableRowLoading count={2} />
-          </div>
-        )}
-        <AtomErrorBoundary
-          result={[validators, myValidators]}
-          niceError="Unable to load validators list"
-          containerProps={{ className: "span-2" }}
-        >
-          {validators.isSuccess && myValidators.isSuccess && (
-            <IncrementBondingTable
-              resultsPerPage={resultsPerPage}
-              validators={sortedValidators}
-              onChangeValidatorAmount={onChangeValidatorAmount}
+      {account?.address && (
+        <Panel className="grid grid-rows-[max-content_auto] w-full relative overflow-hidden">
+          {validators.isSuccess && !initialFilter && (
+            <ValidatorFilterNav
+              validators={validators.data}
               updatedAmountByAddress={updatedAmountByAddress}
               stakedAmountByAddress={stakedAmountByAddress}
+              onChangeSearch={(value: string) => setFilter(value)}
+              onlyMyValidators={onlyMyValidators}
+              onFilterByMyValidators={setOnlyMyValidators}
+              validatorFilter={validatorFilter}
+              onChangeValidatorFilter={setValidatorFilter}
             />
           )}
-        </AtomErrorBoundary>
-      </Panel>
+          {(validators.isLoading || myValidators.isLoading) && (
+            <div className="mt-3">
+              <TableRowLoading count={2} />
+            </div>
+          )}
+          <AtomErrorBoundary
+            result={[validators, myValidators]}
+            niceError="Unable to load validators list"
+            containerProps={{ className: "span-2" }}
+          >
+            {validators.isSuccess && myValidators.isSuccess && (
+              <IncrementBondingTable
+                resultsPerPage={resultsPerPage}
+                validators={sortedValidators}
+                onChangeValidatorAmount={onChangeValidatorAmount}
+                updatedAmountByAddress={updatedAmountByAddress}
+                stakedAmountByAddress={stakedAmountByAddress}
+              />
+            )}
+          </AtomErrorBoundary>
+        </Panel>
+      )}
       <div className="relative grid grid-cols-[1fr_25%_1fr] items-center">
-        <ActionButton
-          type="submit"
-          size="sm"
-          className="mt-2 col-start-2"
-          backgroundColor="cyan"
-          disabled={!!errorMessage || totalUpdatedAmount.eq(0) || !isEnabled}
-        >
-          {isPerformingBonding ? "Processing..." : errorMessage || "Stake"}
-        </ActionButton>
-        {gasConfig && (
-          <TransactionFees
-            className="justify-self-end px-4"
-            gasConfig={gasConfig}
-          />
+        {account?.address && (
+          <>
+            <ActionButton
+              type="submit"
+              size="sm"
+              className="mt-2 col-start-2"
+              backgroundColor="cyan"
+              disabled={
+                !!errorMessage || totalUpdatedAmount.eq(0) || !isEnabled
+              }
+            >
+              {isPerformingBonding ? "Processing..." : errorMessage || "Stake"}
+            </ActionButton>
+            {gasConfig && (
+              <TransactionFees
+                className="justify-self-end px-4"
+                gasConfig={gasConfig}
+              />
+            )}
+          </>
         )}
       </div>
     </form>
-    //   </ModalContainer>
-    // </Modal>
   );
 };
 
