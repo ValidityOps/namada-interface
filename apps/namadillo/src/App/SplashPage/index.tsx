@@ -57,17 +57,44 @@ const ValidatorSplashPage = (): JSX.Element => {
       )
       .dividedBy(validatorList.length) || new BigNumber(0);
 
-  const FilteredIncrementBonding = (): JSX.Element => (
-    <IncrementBonding initialFilter="ValidityOps" />
-  );
+  const FilteredIncrementBonding = (): JSX.Element => {
+    // Calculate total network stake
+    const totalNetworkStake = validators.data.reduce(
+      (sum, validator) =>
+        sum.plus(validator.votingPowerInNAM || new BigNumber(0)),
+      new BigNumber(0)
+    );
+
+    // Find ValidityOps#1's total stake
+    const validityOps1Stake = validators.data
+      .filter((validator) => validator.alias === "ValidityOps#1")
+      .reduce(
+        (sum, validator) =>
+          sum.plus(validator.votingPowerInNAM || new BigNumber(0)),
+        new BigNumber(0)
+      );
+
+    // Calculate ValidityOps#1's stake percentage
+    const stakePercentage = validityOps1Stake
+      .dividedBy(totalNetworkStake)
+      .multipliedBy(100);
+
+    // Show ValidityOps#2 if ValidityOps#1 has >= 10% stake
+    const initialFilter =
+      stakePercentage.isGreaterThanOrEqualTo(10) ? "ValidityOps#2" : (
+        "ValidityOps#1"
+      );
+
+    return <IncrementBonding initialFilter={initialFilter} />;
+  };
 
   return (
     <div className="bg-[#261b51] px-10 min-h-screen">
       <div className="pt-8 pb-16 bg-[#261b51] dark-scrollbar">
-        <div className="relative z-10 flex items-center justify-between gap-4">
+        <div className="relative z-10">
           <TopNavigation />
         </div>
-        <div className="relative h-70 -mt-20">
+        <div className="relative h-70 -mt-20 pointer-events-none">
           <img
             src={validityOpsLogo}
             alt="ValidityOps"
