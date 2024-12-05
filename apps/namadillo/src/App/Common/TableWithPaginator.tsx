@@ -1,5 +1,4 @@
 import { StyledTable, TableHeader, TableRow } from "@namada/components";
-import { FormattedPaginator } from "App/Common/FormattedPaginator";
 import clsx from "clsx";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -56,15 +55,16 @@ export const TableWithPaginator = <T,>({
 
   const pagination = useMemo(() => {
     return (
-      <FormattedPaginator
-        pageRangeDisplayed={3}
-        pageCount={pageCount}
-        forcePage={page}
-        onPageChange={({ selected }) => {
-          scrollTop();
-          onPageChange?.(selected);
-        }}
-      />
+      <></>
+      // <FormattedPaginator
+      //   pageRangeDisplayed={3}
+      //   pageCount={pageCount}
+      //   forcePage={page}
+      //   onPageChange={({ selected }) => {
+      //     scrollTop();
+      //     onPageChange?.(selected);
+      //   }}
+      // />
     );
   }, [page, itemList, onPageChange]);
 

@@ -96,7 +96,7 @@ export const ValidatorsTable = ({
     >
       {selectedValidator && (
         <ValidatorInfoPanel
-          className="h-full right-0 top-0"
+          className="relative w-full mb-4"
           validator={selectedValidator}
           onClose={() => setSelectedValidator(undefined)}
         />
