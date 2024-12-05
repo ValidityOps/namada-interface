@@ -1,5 +1,5 @@
 # Uncomment the following lines to define your default indexer and rpc urls
-#indexer_url = ""
-#rpc_url = ""
+rpc_url     = "https://namada-mainnet-rpc.itrocket.net:443"
+indexer_url = "https://namada-idx.emberstake.xyz"
 #masp_indexer_url = ""
 #localnet_enabled = false

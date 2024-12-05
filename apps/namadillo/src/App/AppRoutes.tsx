@@ -34,6 +34,7 @@ import { SettingsMain } from "./Settings/SettingsMain";
 import { SettingsPanel } from "./Settings/SettingsPanel";
 import { SettingsSignArbitrary } from "./Settings/SettingsSignArbitrary";
 import { SignMessages } from "./SignMessages/SignMessages";
+import ValidatorSplashPage from "./SplashPage";
 import IncrementBonding from "./Staking/IncrementBonding";
 import { ReDelegate } from "./Staking/ReDelegate";
 import { StakingOverview } from "./Staking/StakingOverview";
@@ -63,6 +64,9 @@ export const MainRoutes = (): JSX.Element => {
           element={<App />}
           errorElement={<RouteErrorBoundary />}
         >
+          {/* Splash */}
+          <Route path={routes.splash} element={<ValidatorSplashPage />} />
+
           {/* Home */}
           <Route index element={<AccountOverview />} />
 

@@ -1,4 +1,5 @@
 import { ReactNode, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { twMerge } from "tailwind-merge";
 import { AppHeader } from "./AppHeader";
 import { BurgerButton } from "./BurgerButton";
@@ -10,6 +11,12 @@ export const AppLayout = ({
   children: ReactNode;
 }): JSX.Element => {
   const [displayNavigation, setDisplayNavigation] = useState(false);
+  const location = useLocation();
+  const isSplashRoute = location.pathname.includes("/splash");
+
+  if (isSplashRoute) {
+    return <main className="min-h-full">{children}</main>;
+  }
 
   return (
     <div className="custom-container pb-2">
