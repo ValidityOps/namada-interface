@@ -65,10 +65,10 @@ export const MainRoutes = (): JSX.Element => {
           errorElement={<RouteErrorBoundary />}
         >
           {/* Splash */}
-          <Route path={routes.splash} element={<ValidatorSplashPage />} />
+          <Route index element={<ValidatorSplashPage />} />
 
           {/* Home */}
-          <Route index element={<AccountOverview />} />
+          <Route path={routes.namadillo} element={<AccountOverview />} />
 
           {/* Staking */}
           <Route path={routes.staking} element={<StakingOverview />} />

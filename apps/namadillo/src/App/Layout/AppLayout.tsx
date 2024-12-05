@@ -12,9 +12,9 @@ export const AppLayout = ({
 }): JSX.Element => {
   const [displayNavigation, setDisplayNavigation] = useState(false);
   const location = useLocation();
-  const isSplashRoute = location.pathname.includes("/splash");
-
-  if (isSplashRoute) {
+  const isRootRoute = location.pathname === "/";
+  console.log(location.pathname);
+  if (isRootRoute) {
     return <main className="min-h-full">{children}</main>;
   }
 
