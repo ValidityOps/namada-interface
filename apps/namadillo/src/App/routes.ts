@@ -1,6 +1,9 @@
 export const routes = {
   root: "/",
 
+  // Splash
+  splash: "/splash",
+
   // Staking
   staking: "/staking",
   stakingBondingIncrement: "/staking/bonding/increment",

@@ -27,7 +27,7 @@ export const AppHeader = ({ burger }: { burger: ReactNode }): JSX.Element => {
           <span className="w-[40px]">
             <Logo eyeOpen={true} />
           </span>
-          <span className="hidden sm:block">Namadillo</span>
+          <span className="hidden sm:block">ValidityOps</span>
         </Link>
       </div>
 
