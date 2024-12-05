@@ -92,7 +92,7 @@ const ValidatorSplashPage = (): JSX.Element => {
         </div>
 
         {/* Logo container with positive z-index */}
-        <div className="relative flex justify-center -mb-30 -mt-30">
+        <div className="relative flex justify-center -my-35">
           <img
             src={validityOpsLogo}
             alt="ValidityOps"
@@ -122,14 +122,14 @@ const ValidatorSplashPage = (): JSX.Element => {
               {Number(commission.multipliedBy(100).toFixed(2))}%
             </p>
           </div>
-          <div className="p-6 bg-[#261b51] border-4 border-[#3f65a3] rounded-lg col-span-full">
+          {/* <div className="p-6 bg-[#261b51] border-4 border-[#3f65a3] rounded-lg col-span-full">
             <h2 className="text-xl font-semibold text-[#3f65a3]">
               Unbonding Periods
             </h2>
             <p className="text-lg font-bold text-[#48b9d2] mt-4">
               {uniqueUnbondingPeriods.join(", ")}
             </p>
-          </div>
+          </div> */}
         </div>
         <FilteredIncrementBonding />
       </div>
