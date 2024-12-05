@@ -58,14 +58,12 @@ const ValidatorSplashPage = (): JSX.Element => {
       .dividedBy(validatorList.length) || new BigNumber(0);
 
   const FilteredIncrementBonding = (): JSX.Element => {
-    // Calculate total network stake
     const totalNetworkStake = validators.data.reduce(
       (sum, validator) =>
         sum.plus(validator.votingPowerInNAM || new BigNumber(0)),
       new BigNumber(0)
     );
 
-    // Find ValidityOps#1's total stake
     const validityOps1Stake = validators.data
       .filter((validator) => validator.alias === "ValidityOps#1")
       .reduce(
@@ -74,12 +72,10 @@ const ValidatorSplashPage = (): JSX.Element => {
         new BigNumber(0)
       );
 
-    // Calculate ValidityOps#1's stake percentage
     const stakePercentage = validityOps1Stake
       .dividedBy(totalNetworkStake)
       .multipliedBy(100);
 
-    // Show ValidityOps#2 if ValidityOps#1 has >= 10% stake
     const initialFilter =
       stakePercentage.isGreaterThanOrEqualTo(10) ? "ValidityOps#2" : (
         "ValidityOps#1"
@@ -94,13 +90,17 @@ const ValidatorSplashPage = (): JSX.Element => {
         <div className="relative z-10">
           <TopNavigation />
         </div>
-        <div className="relative h-70 -mt-20 pointer-events-none">
+
+        {/* Logo container with positive z-index */}
+        <div className="relative flex justify-center -mb-30 -mt-30">
           <img
             src={validityOpsLogo}
             alt="ValidityOps"
-            className="absolute left-1/2 -translate-x-1/2 w-[600px] h-auto -top-32"
+            className="w-[500px] h-auto"
           />
         </div>
+
+        {/* Cards with regular z-index */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 mb-5">
           <div className="p-6 bg-[#261b51] border-4 border-[#3f65a3] rounded-lg">
             <h2 className="text-xl font-semibold text-[#3f65a3]">
