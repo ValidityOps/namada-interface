@@ -27,7 +27,7 @@ export type useTransactionProps<T> = {
   createTxAtom: AtomType<T>;
   eventType: TransactionEventsClasses;
   parsePendingTxNotification?: (tx: TransactionPair<T>) => PartialNotification;
-  parseErrorTxNotification?: () => PartialNotification;
+  parseErrorTxNotification?: (err?: unknown) => PartialNotification;
   onSigned?: (tx: TransactionPair<T>) => void;
   onError?: (err: unknown) => void;
   onSuccess?: (tx: TransactionPair<T>) => void;
@@ -139,7 +139,7 @@ export const useTransaction = <T,>({
       return tx;
     } catch (err) {
       if (parseErrorTxNotification) {
-        dispatchErrorNotification(err, parseErrorTxNotification());
+        dispatchErrorNotification(err, parseErrorTxNotification(err));
       }
 
       if (onError) {

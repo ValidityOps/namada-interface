@@ -35,10 +35,6 @@ const ValidatorSplashPage = (): JSX.Element => {
     new BigNumber(0)
   );
 
-  const uniqueUnbondingPeriods = [
-    ...new Set(validatorList.map((validator) => validator.unbondingPeriod)),
-  ].sort();
-
   const averageApr =
     validatorList.length > 0 ?
       validatorList

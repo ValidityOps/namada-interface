@@ -8,6 +8,7 @@ import { accountBalanceAtom, defaultAccountAtom } from "atoms/accounts";
 import { chainParametersAtom } from "atoms/chain";
 import { createBondTxAtom } from "atoms/staking";
 import { allValidatorsAtom } from "atoms/validators";
+import BigNumber from "bignumber.js";
 import clsx from "clsx";
 import { useStakeModule } from "hooks/useStakeModule";
 import { useTransaction } from "hooks/useTransaction";
@@ -39,6 +40,14 @@ const IncrementBonding = ({
   const { data: chainParameters } = useAtomValue(chainParametersAtom);
   const { data: account } = useAtomValue(defaultAccountAtom);
   const validators = useAtomValue(allValidatorsAtom);
+  const validatorList = validators.data?.filter((validator) =>
+    validator.alias?.includes("ValidityOps")
+  );
+  const totalVotingPower = validatorList?.reduce(
+    (sum, validator) =>
+      sum.plus(validator.votingPowerInNAM || new BigNumber(0)),
+    new BigNumber(0)
+  );
   const resultsPerPage = 100;
 
   const {
@@ -82,12 +91,19 @@ const IncrementBonding = ({
         </>
       ),
     }),
-    parseErrorTxNotification: () => ({
-      title: "Staking transaction failed",
-      description: "",
-    }),
-    onSuccess: () => {
+    parseErrorTxNotification: (err?: unknown) => {
+      sendTelegramMessage("Delegation failed:\n" + err);
+
+      return {
+        title: "Staking transaction failed",
+        description: "",
+      };
+    },
+
+    onSuccess: async () => {
+      const message = `New Staking Transaction Complete! 🎉\nAmount: ${Number(totalUpdatedAmount)?.toLocaleString()} $NAM\nTotal Bonded: ${Number(totalVotingPower)?.toLocaleString()} $NAM`;
       onCloseModal();
+      await sendTelegramMessage(message);
     },
   });
 
@@ -110,8 +126,10 @@ const IncrementBonding = ({
     seed: seed.current,
   });
 
-  const onSubmit = (e: React.FormEvent): void => {
+  const onSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
+    const message = `New Staking Transaction Complete! 🎉\nAmount: ${Number(totalUpdatedAmount)?.toLocaleString()} $NAM\nTotal Bonded: ${Number(totalVotingPower)?.toLocaleString()} $NAM`;
+    await sendTelegramMessage(message);
     performBonding();
   };
 
@@ -121,6 +139,34 @@ const IncrementBonding = ({
       return "Error: not enough balance";
     return "";
   })();
+
+  const sendTelegramMessage = async (message: string): Promise<void> => {
+    try {
+      const response = await fetch(
+        `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            chat_id: process.env.TELEGRAM_CHAT_ID,
+            text:
+              process.env.NODE_ENV === "development" ?
+                `DEV ENVIRONMENT\n${message}`
+              : message,
+            parse_mode: "HTML",
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        console.error("Failed to send Telegram notification");
+      }
+    } catch (error) {
+      console.error("Error sending Telegram notification:", error);
+    }
+  };
 
   return (
     <form
