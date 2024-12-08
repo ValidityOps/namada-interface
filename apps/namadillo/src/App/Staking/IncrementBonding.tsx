@@ -92,8 +92,6 @@ const IncrementBonding = ({
       ),
     }),
     parseErrorTxNotification: (err?: unknown) => {
-      sendTelegramMessage("Delegation failed:\n" + err);
-
       return {
         title: "Staking transaction failed",
         description: "",
@@ -128,8 +126,10 @@ const IncrementBonding = ({
 
   const onSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
-    const message = `New Staking Transaction Complete! 🎉\nAmount: ${Number(totalUpdatedAmount)?.toLocaleString()} $NAM\nTotal Bonded: ${Number(totalVotingPower)?.toLocaleString()} $NAM`;
-    await sendTelegramMessage(message);
+    if (process.env.NODE_ENV === "development") {
+      const message = `New Staking Transaction Complete! 🎉\nAmount: ${Number(totalUpdatedAmount)?.toLocaleString()} $NAM\nTotal Bonded: ${Number(totalVotingPower)?.toLocaleString()} $NAM`;
+      await sendTelegramMessage(message);
+    }
     performBonding();
   };
 
@@ -143,28 +143,25 @@ const IncrementBonding = ({
   const sendTelegramMessage = async (message: string): Promise<void> => {
     try {
       const response = await fetch(
-        `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`,
+        "https://namada-telegram-api-service.vercel.app/api/telegram",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            chat_id: process.env.TELEGRAM_CHAT_ID,
-            text:
-              process.env.NODE_ENV === "development" ?
-                `DEV ENVIRONMENT\n${message}`
-              : message,
-            parse_mode: "HTML",
-          }),
+          body: JSON.stringify({ message }),
         }
       );
 
       if (!response.ok) {
-        console.error("Failed to send Telegram notification");
+        const errorData = await response.json();
+        throw new Error(
+          `Failed to send Telegram notification: ${JSON.stringify(errorData)}`
+        );
       }
     } catch (error) {
       console.error("Error sending Telegram notification:", error);
+      throw error;
     }
   };
 
