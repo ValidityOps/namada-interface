@@ -17,6 +17,7 @@ import { useValidatorSorting } from "hooks/useValidatorSorting";
 import { useAtomValue } from "jotai";
 import { useRef, useState } from "react";
 import { GoAlert } from "react-icons/go";
+import { useLocation } from "react-router-dom";
 import { ValidatorFilterOptions } from "types";
 import { BondingAmountOverview } from "./BondingAmountOverview";
 import { IncrementBondingTable } from "./IncrementBondingTable";
@@ -36,6 +37,9 @@ const IncrementBonding = ({
     useState<ValidatorFilterOptions>("all");
   const accountBalance = useAtomValue(accountBalanceAtom);
   const seed = useRef(Math.random());
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const referralAddress = queryParams.get("referral");
 
   const { data: chainParameters } = useAtomValue(chainParametersAtom);
   const { data: account } = useAtomValue(defaultAccountAtom);
@@ -104,7 +108,7 @@ const IncrementBonding = ({
       await sendTelegramMessage(
         message,
         Number(totalUpdatedAmount),
-        account!.address
+        referralAddress ? account!.address : null
       );
     },
   });
@@ -151,7 +155,7 @@ const IncrementBonding = ({
   const sendTelegramMessage = async (
     message: string,
     total: number,
-    userAddress: string
+    userAddress: string | null
   ): Promise<void> => {
     try {
       const response = await fetch(
