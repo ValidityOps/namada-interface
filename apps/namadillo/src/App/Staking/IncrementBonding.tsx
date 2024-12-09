@@ -101,7 +101,11 @@ const IncrementBonding = ({
     onSuccess: async () => {
       const message = `New Staking Transaction Complete! 🎉\nAmount: ${Number(totalUpdatedAmount)?.toLocaleString()} $NAM\nTotal Bonded: ${Number(totalVotingPower)?.toLocaleString()} $NAM`;
       onCloseModal();
-      await sendTelegramMessage(message);
+      await sendTelegramMessage(
+        message,
+        Number(totalUpdatedAmount),
+        account!.address
+      );
     },
   });
 
@@ -128,7 +132,11 @@ const IncrementBonding = ({
     e.preventDefault();
     if (process.env.NODE_ENV === "development") {
       const message = `New Staking Transaction Complete! 🎉\nAmount: ${Number(totalUpdatedAmount)?.toLocaleString()} $NAM\nTotal Bonded: ${Number(totalVotingPower)?.toLocaleString()} $NAM`;
-      await sendTelegramMessage(message);
+      await sendTelegramMessage(
+        message,
+        Number(totalUpdatedAmount),
+        account!.address
+      );
     }
     performBonding();
   };
@@ -140,7 +148,11 @@ const IncrementBonding = ({
     return "";
   })();
 
-  const sendTelegramMessage = async (message: string): Promise<void> => {
+  const sendTelegramMessage = async (
+    message: string,
+    total: number,
+    userAddress: string
+  ): Promise<void> => {
     try {
       const response = await fetch(
         "https://namada-telegram-api-service.vercel.app/api/telegram",
@@ -149,7 +161,7 @@ const IncrementBonding = ({
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ message }),
+          body: JSON.stringify({ message, total, userAddress }),
         }
       );
 
