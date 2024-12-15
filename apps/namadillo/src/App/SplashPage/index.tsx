@@ -1,5 +1,6 @@
 import { TopNavigation } from "App/Layout/TopNavigation";
 import IncrementBonding from "App/Staking/IncrementBonding";
+import { defaultAccountAtom } from "atoms/accounts";
 import { atomsAreLoading, atomsAreNotInitialized } from "atoms/utils";
 import { allValidatorsAtom } from "atoms/validators";
 import { BigNumber } from "bignumber.js";
@@ -8,6 +9,7 @@ import validityOpsLogo from "./assets/validitylogo.png";
 
 const ValidatorSplashPage = (): JSX.Element => {
   const validators = useAtomValue(allValidatorsAtom);
+  const { data: account } = useAtomValue(defaultAccountAtom);
 
   if (atomsAreLoading(validators) || atomsAreNotInitialized(validators)) {
     return (
@@ -82,12 +84,64 @@ const ValidatorSplashPage = (): JSX.Element => {
 
   return (
     <div className="bg-[#261b51] px-10 min-h-screen">
+      {account?.address && (
+        <div className="rounded-lg bg-gradient-to-r from-green-500 to-green-600 p-6 mb-6 shadow-lg transform transition-all hover:shadow-xl">
+          <div className="flex flex-col space-y-3">
+            <h3 className="text-xl font-semibold text-white flex items-center gap-2">
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+              Thank you for choosing ValidityOps
+            </h3>
+            <div className="text-white/90">
+              Here is a referral link to earn back rewards for each staking
+              delegation that uses your referral link:
+            </div>
+            <div className="mt-2 flex items-center gap-2 bg-white/10 p-3 rounded-lg backdrop-blur-sm border border-white/20">
+              <input
+                type="text"
+                readOnly
+                value={`https://validityops.com?/referral=${account.address}`}
+                className="flex-1 bg-transparent text-white font-medium focus:outline-none text-sm"
+              />
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(
+                    `https://validityops.com?/referral=${account.address}`
+                  );
+                  const button = document.getElementById("copyButton");
+                  if (button) {
+                    button.innerHTML = "Copied!";
+                    setTimeout(() => {
+                      button.innerHTML = "Copy";
+                    }, 2000);
+                  }
+                }}
+                id="copyButton"
+                className="px-4 py-1.5 bg-white text-green-600 rounded-md text-sm font-medium hover:bg-green-50 transition-colors duration-200"
+              >
+                Copy
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="pt-8 pb-16 bg-[#261b51] dark-scrollbar">
         <div className="relative z-10">
           <TopNavigation />
         </div>
 
-        {/* Logo container with positive z-index */}
         <div className="relative flex justify-center -my-35">
           <img
             src={validityOpsLogo}
@@ -96,7 +150,6 @@ const ValidatorSplashPage = (): JSX.Element => {
           />
         </div>
 
-        {/* Cards with regular z-index */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 mb-5">
           <div className="p-6 bg-[#261b51] border-4 border-[#3f65a3] rounded-lg">
             <h2 className="text-xl font-semibold text-[#3f65a3]">
@@ -118,14 +171,6 @@ const ValidatorSplashPage = (): JSX.Element => {
               {Number(commission.multipliedBy(100).toFixed(2))}%
             </p>
           </div>
-          {/* <div className="p-6 bg-[#261b51] border-4 border-[#3f65a3] rounded-lg col-span-full">
-            <h2 className="text-xl font-semibold text-[#3f65a3]">
-              Unbonding Periods
-            </h2>
-            <p className="text-lg font-bold text-[#48b9d2] mt-4">
-              {uniqueUnbondingPeriods.join(", ")}
-            </p>
-          </div> */}
         </div>
         <FilteredIncrementBonding />
       </div>

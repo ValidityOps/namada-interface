@@ -17,6 +17,7 @@ import { useValidatorSorting } from "hooks/useValidatorSorting";
 import { useAtomValue } from "jotai";
 import { useRef, useState } from "react";
 import { GoAlert } from "react-icons/go";
+import { useLocation } from "react-router-dom";
 import { ValidatorFilterOptions } from "types";
 import { BondingAmountOverview } from "./BondingAmountOverview";
 import { IncrementBondingTable } from "./IncrementBondingTable";
@@ -36,6 +37,9 @@ const IncrementBonding = ({
     useState<ValidatorFilterOptions>("all");
   const accountBalance = useAtomValue(accountBalanceAtom);
   const seed = useRef(Math.random());
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const referralAddress = queryParams.get("referral");
 
   const { data: chainParameters } = useAtomValue(chainParametersAtom);
   const { data: account } = useAtomValue(defaultAccountAtom);
@@ -101,7 +105,11 @@ const IncrementBonding = ({
     onSuccess: async () => {
       const message = `New Staking Transaction Complete! 🎉\nAmount: ${Number(totalUpdatedAmount)?.toLocaleString()} $NAM\nTotal Bonded: ${Number(totalVotingPower)?.toLocaleString()} $NAM`;
       onCloseModal();
-      await sendTelegramMessage(message);
+      await sendTelegramMessage(
+        message,
+        Number(totalUpdatedAmount),
+        referralAddress ? account!.address : null
+      );
     },
   });
 
@@ -128,7 +136,11 @@ const IncrementBonding = ({
     e.preventDefault();
     if (process.env.NODE_ENV === "development") {
       const message = `New Staking Transaction Complete! 🎉\nAmount: ${Number(totalUpdatedAmount)?.toLocaleString()} $NAM\nTotal Bonded: ${Number(totalVotingPower)?.toLocaleString()} $NAM`;
-      await sendTelegramMessage(message);
+      await sendTelegramMessage(
+        message,
+        Number(totalUpdatedAmount),
+        account!.address
+      );
     }
     performBonding();
   };
@@ -140,7 +152,11 @@ const IncrementBonding = ({
     return "";
   })();
 
-  const sendTelegramMessage = async (message: string): Promise<void> => {
+  const sendTelegramMessage = async (
+    message: string,
+    total: number,
+    userAddress: string | null
+  ): Promise<void> => {
     try {
       const response = await fetch(
         "https://namada-telegram-api-service.vercel.app/api/telegram",
@@ -149,7 +165,7 @@ const IncrementBonding = ({
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ message }),
+          body: JSON.stringify({ message, total, userAddress }),
         }
       );
 
