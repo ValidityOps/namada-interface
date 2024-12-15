@@ -1,5 +1,6 @@
 import { TopNavigation } from "App/Layout/TopNavigation";
 import IncrementBonding from "App/Staking/IncrementBonding";
+import { StakingSummary } from "App/Staking/StakingSummary";
 import { atomsAreLoading, atomsAreNotInitialized } from "atoms/utils";
 import { allValidatorsAtom } from "atoms/validators";
 import { BigNumber } from "bignumber.js";
@@ -127,6 +128,10 @@ const ValidatorSplashPage = (): JSX.Element => {
             </p>
           </div> */}
         </div>
+        <div className="mb-2">
+          <StakingSummary />
+        </div>
+
         <FilteredIncrementBonding />
       </div>
     </div>
