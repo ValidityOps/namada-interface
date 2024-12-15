@@ -44,6 +44,7 @@ const ValidatorSplashPage = (): JSX.Element => {
           new BigNumber(0)
         )
         .dividedBy(validatorList.length)
+        .times(100)
     : new BigNumber(0);
 
   const commission =
