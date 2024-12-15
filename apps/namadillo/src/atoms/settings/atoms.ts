@@ -21,7 +21,7 @@ export const namadaExtensionConnectedAtom = atom<boolean>(
 );
 
 export const defaultApplicationFeatures = {
-  claimRewardsEnabled: false,
+  claimRewardsEnabled: true,
   maspEnabled: false,
   ibcTransfersEnabled: false,
   ibcShieldingEnabled: false,
