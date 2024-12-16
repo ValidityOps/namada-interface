@@ -13,7 +13,7 @@ export const AppLayout = ({
   const [displayNavigation, setDisplayNavigation] = useState(false);
   const location = useLocation();
   const isRootRoute = location.pathname === "/";
-  console.log(location.pathname);
+
   if (isRootRoute) {
     return <main className="min-h-full">{children}</main>;
   }

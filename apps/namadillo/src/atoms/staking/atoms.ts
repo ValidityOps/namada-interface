@@ -101,6 +101,7 @@ export const claimableRewardsAtom = atomWithQuery<AddressBalance>((get) => {
   const account = get(defaultAccountAtom);
   const chainParameters = get(chainParametersAtom);
   const api = get(indexerApiAtom);
+
   return {
     queryKey: ["claim-rewards", account.data?.address],
     refetchInterval: 60 * 1000,
