@@ -27,7 +27,7 @@ type IncrementBondingProps = {
 const IncrementBonding = ({
   initialFilter = "",
 }: IncrementBondingProps): JSX.Element => {
-  const [filter, setFilter] = useState<string>(initialFilter);
+  // const [filter, setFilter] = useState<string>(initialFilter);
   const [onlyMyValidators, setOnlyMyValidators] = useState(false);
   const [validatorFilter, setValidatorFilter] =
     useState<ValidatorFilterOptions>("all");
@@ -110,7 +110,7 @@ const IncrementBonding = ({
         ...Object.keys(updatedAmountByAddress),
       ])
     ),
-    searchTerm: filter,
+    searchTerm: initialFilter,
     validatorFilter,
     onlyMyValidators,
   });
@@ -216,7 +216,7 @@ const IncrementBonding = ({
               validators={validators.data}
               updatedAmountByAddress={updatedAmountByAddress}
               stakedAmountByAddress={stakedAmountByAddress}
-              onChangeSearch={(value: string) => setFilter(value)}
+              onChangeSearch={(value: string) => null}
               onlyMyValidators={onlyMyValidators}
               onFilterByMyValidators={setOnlyMyValidators}
               validatorFilter={validatorFilter}
