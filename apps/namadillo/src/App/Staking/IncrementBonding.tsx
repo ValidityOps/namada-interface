@@ -1,4 +1,4 @@
-import { ActionButton, Alert, Panel } from "@namada/components";
+import { ActionButton, Panel } from "@namada/components";
 import { BondMsgValue } from "@namada/types";
 import { AtomErrorBoundary } from "App/Common/AtomErrorBoundary";
 import { NamCurrency } from "App/Common/NamCurrency";
@@ -9,16 +9,13 @@ import { chainParametersAtom } from "atoms/chain";
 import { createBondTxAtom } from "atoms/staking";
 import { allValidatorsAtom } from "atoms/validators";
 import BigNumber from "bignumber.js";
-import clsx from "clsx";
 import { useStakeModule } from "hooks/useStakeModule";
 import { useTransaction } from "hooks/useTransaction";
 import { useValidatorFilter } from "hooks/useValidatorFilter";
 import { useValidatorSorting } from "hooks/useValidatorSorting";
 import { useAtomValue } from "jotai";
 import { useRef, useState } from "react";
-import { GoAlert } from "react-icons/go";
 import { ValidatorFilterOptions } from "types";
-import { BondingAmountOverview } from "./BondingAmountOverview";
 import { IncrementBondingTable } from "./IncrementBondingTable";
 import { ValidatorFilterNav } from "./ValidatorFilterNav";
 
@@ -170,7 +167,7 @@ const IncrementBonding = ({
       onSubmit={onSubmit}
       className="grid grid-rows-[max-content_auto_max-content] gap-2 h-full"
     >
-      <div className="grid grid-cols-[repeat(auto-fit,_minmax(8rem,_1fr))] gap-1.5">
+      {/* <div className="grid grid-cols-[repeat(auto-fit,_minmax(8rem,_1fr))] gap-1.5">
         <BondingAmountOverview
           title="Available to Stake"
           className="col-span-2"
@@ -211,7 +208,7 @@ const IncrementBonding = ({
           updatedValueClassList="text-yellow"
           amountInNam={0}
         />
-      </div>
+      </div> */}
       {account?.address && (
         <Panel className="grid grid-rows-[max-content_auto] w-full relative overflow-hidden">
           {validators.isSuccess && !initialFilter && (

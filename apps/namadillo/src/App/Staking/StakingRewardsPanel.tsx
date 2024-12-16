@@ -24,6 +24,7 @@ export const StakingRewardsPanel = (): JSX.Element => {
       "Unclaimed Staking Rewards"
     : "Staking Rewards will be enabled in phase 2";
 
+  console.log("rewards", rewards);
   return (
     <AmountSummaryCard
       className={clsx({

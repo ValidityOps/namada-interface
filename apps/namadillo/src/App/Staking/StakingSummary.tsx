@@ -1,13 +1,7 @@
-import {
-  ActionButton,
-  AmountSummaryCard,
-  Image,
-  Panel,
-} from "@namada/components";
+import { AmountSummaryCard, Image, Panel } from "@namada/components";
 import { AtomErrorBoundary } from "App/Common/AtomErrorBoundary";
 import { BalanceChart } from "App/Common/BalanceChart";
 import { NamCurrency } from "App/Common/NamCurrency";
-import { routes } from "App/routes";
 import { useBalances } from "hooks/useBalances";
 import { StakingRewardsPanel } from "./StakingRewardsPanel";
 
@@ -65,14 +59,15 @@ export const StakingSummary = (): JSX.Element => {
               />
             }
             callToAction={
-              <ActionButton
-                className="px-8"
-                size="xs"
-                backgroundColor="cyan"
-                href={routes.stakingBondingIncrement}
-              >
-                Stake
-              </ActionButton>
+              <></>
+              // <ActionButton
+              //   className="px-8"
+              //   size="xs"
+              //   backgroundColor="cyan"
+              //   href={routes.stakingBondingIncrement}
+              // >
+              //   Stake
+              // </ActionButton>
             }
           />
         </AtomErrorBoundary>

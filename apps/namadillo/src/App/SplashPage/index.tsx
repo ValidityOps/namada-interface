@@ -1,5 +1,7 @@
 import { TopNavigation } from "App/Layout/TopNavigation";
 import IncrementBonding from "App/Staking/IncrementBonding";
+import { StakingSummary } from "App/Staking/StakingSummary";
+import { chainStatusAtom } from "atoms/chain";
 import { atomsAreLoading, atomsAreNotInitialized } from "atoms/utils";
 import { allValidatorsAtom } from "atoms/validators";
 import { BigNumber } from "bignumber.js";
@@ -8,6 +10,7 @@ import validityOpsLogo from "./assets/validitylogo.png";
 
 const ValidatorSplashPage = (): JSX.Element => {
   const validators = useAtomValue(allValidatorsAtom);
+  const chainStatus = useAtomValue(chainStatusAtom);
 
   if (atomsAreLoading(validators) || atomsAreNotInitialized(validators)) {
     return (
@@ -43,6 +46,7 @@ const ValidatorSplashPage = (): JSX.Element => {
           new BigNumber(0)
         )
         .dividedBy(validatorList.length)
+        .times(100)
     : new BigNumber(0);
 
   const commission =
@@ -97,7 +101,7 @@ const ValidatorSplashPage = (): JSX.Element => {
         </div>
 
         {/* Cards with regular z-index */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 mb-5">
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-5">
           <div className="p-6 bg-[#261b51] border-4 border-[#3f65a3] rounded-lg">
             <h2 className="text-xl font-semibold text-[#3f65a3]">
               Total Voting Power
@@ -118,15 +122,19 @@ const ValidatorSplashPage = (): JSX.Element => {
               {Number(commission.multipliedBy(100).toFixed(2))}%
             </p>
           </div>
-          {/* <div className="p-6 bg-[#261b51] border-4 border-[#3f65a3] rounded-lg col-span-full">
+          <div className="p-6 bg-[#261b51] border-4 border-[#3f65a3] rounded-lg">
             <h2 className="text-xl font-semibold text-[#3f65a3]">
-              Unbonding Periods
+              Current Epoch
             </h2>
-            <p className="text-lg font-bold text-[#48b9d2] mt-4">
-              {uniqueUnbondingPeriods.join(", ")}
+            <p className="text-3xl font-bold text-[#48b9d2] mt-4">
+              {chainStatus?.epoch || "-"}
             </p>
-          </div> */}
+          </div>
         </div>
+        <div className="mb-2">
+          <StakingSummary />
+        </div>
+
         <FilteredIncrementBonding />
       </div>
     </div>
