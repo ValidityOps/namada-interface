@@ -1,0 +1,37 @@
+name: Check Site and Alert via Pushover
+
+on:
+  schedule:
+    # Runs every 5 minutes
+    - cron: "*/1 * * * *"
+
+jobs:
+  check-site:
+    runs-on: ubuntu-latest
+    steps:
+      # Step 1: Check the site for a 404 status code
+      - name: Check Root Route
+        id: check_site
+        run: |
+          # Use curl to check the site's root route and store the HTTP status code
+          STATUS=$(curl -o /dev/null -s -w "%{http_code}" https://www.validityops.com)
+
+          # If the status code is 404, write a special output for use in later steps
+          if [ "$STATUS" -eq 404 ]; then
+            echo "status=404" >> $GITHUB_OUTPUT
+          else
+            echo "status=$STATUS" >> $GITHUB_OUTPUT
+          fi
+
+      # Step 2: If the status was 404, send a Pushover notification
+      - name: Send Pushover Notification
+        if: steps.check_site.outputs.status == '200'
+        run: |
+          # Send a POST request to Pushover using the token and user key stored in GitHub Secrets.
+          curl -s \
+          --form-string "token=${{ secrets.PUSHOVER_TOKEN }}" \
+          --form-string "user=${{ secrets.PUSHOVER_USER_KEY }}" \
+          --form-string "message=ALERT: The root route returned a 404!" \
+          --form-string "title=Site Check Failure" \
+          --form-string "priority=1" \
+          https://api.pushover.net/1/messages.json
