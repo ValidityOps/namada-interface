@@ -1,6 +1,7 @@
 name: Check Site and Alert via Pushover
 
 on:
+  workflow_dispatch:
   schedule:
     # Runs every 5 minutes
     - cron: "*/1 * * * *"
