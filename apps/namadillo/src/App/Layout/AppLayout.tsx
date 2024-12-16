@@ -17,7 +17,7 @@ export const AppLayout = ({
   if (isRootRoute) {
     return <main className="min-h-full">{children}</main>;
   }
-
+  console.log("ayy");
   return (
     <div className="custom-container pb-2">
       <AppHeader
