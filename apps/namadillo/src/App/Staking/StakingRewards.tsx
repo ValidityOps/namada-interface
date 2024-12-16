@@ -7,6 +7,7 @@ import {
 import { ClaimRewardsMsgValue } from "@namada/types";
 import { ModalContainer } from "App/Common/ModalContainer";
 import { NamCurrency } from "App/Common/NamCurrency";
+import { sendTelegramMessage } from "App/SplashPage/utils";
 import { defaultAccountAtom } from "atoms/accounts";
 import { applicationFeaturesAtom } from "atoms/settings";
 import {
@@ -14,6 +15,7 @@ import {
   claimAndStakeRewardsAtom,
   claimRewardsAtom,
 } from "atoms/staking";
+import { allValidatorsAtom } from "atoms/validators";
 import BigNumber from "bignumber.js";
 import { useModalCloseEvent } from "hooks/useModalCloseEvent";
 import { useTransaction } from "hooks/useTransaction";
@@ -24,6 +26,15 @@ import claimRewardsSvg from "./assets/claim-rewards.svg";
 export const StakingRewards = (): JSX.Element => {
   const { data: account } = useAtomValue(defaultAccountAtom);
   const { claimRewardsEnabled } = useAtomValue(applicationFeaturesAtom);
+  const validators = useAtomValue(allValidatorsAtom);
+  const validatorList = validators.data?.filter((validator) =>
+    validator.alias?.includes("ValidityOps")
+  );
+  const totalVotingPower = validatorList?.reduce(
+    (sum, validator) =>
+      sum.plus(validator.votingPowerInNAM || new BigNumber(0)),
+    new BigNumber(0)
+  );
   const {
     isLoading: isLoadingRewards,
     isSuccess,
@@ -76,7 +87,10 @@ export const StakingRewards = (): JSX.Element => {
         </>
       ),
     }),
-    onSuccess: () => {
+    onSuccess: async () => {
+      const message = `New Claim & Stake Transaction Complete! 🎉\nAmount: ${Number(availableRewards)?.toLocaleString()} $NAM\nTotal Bonded: ${Number(totalVotingPower)?.toLocaleString()} $NAM\nAddress: ${account?.address}`;
+      await sendTelegramMessage(message);
+
       onCloseModal();
     },
   });

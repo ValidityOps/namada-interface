@@ -13,8 +13,6 @@ const ValidatorSplashPage = (): JSX.Element => {
   const validators = useAtomValue(allValidatorsAtom);
   const chainStatus = useAtomValue(chainStatusAtom);
 
-  console.log("yooo");
-
   const validatorList =
     validators.isSuccess ?
       (validators.data?.filter((validator) =>

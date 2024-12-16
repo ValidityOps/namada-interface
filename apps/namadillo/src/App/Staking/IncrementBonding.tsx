@@ -4,6 +4,7 @@ import { AtomErrorBoundary } from "App/Common/AtomErrorBoundary";
 import { NamCurrency } from "App/Common/NamCurrency";
 import { TableRowLoading } from "App/Common/TableRowLoading";
 import { TransactionFees } from "App/Common/TransactionFees";
+import { sendTelegramMessage } from "App/SplashPage/utils";
 import { accountBalanceAtom, defaultAccountAtom } from "atoms/accounts";
 import { chainParametersAtom } from "atoms/chain";
 import { createBondTxAtom } from "atoms/staking";
@@ -96,7 +97,7 @@ const IncrementBonding = ({
     },
 
     onSuccess: async () => {
-      const message = `New Staking Transaction Complete! 🎉\nAmount: ${Number(totalUpdatedAmount)?.toLocaleString()} $NAM\nTotal Bonded: ${Number(totalVotingPower)?.toLocaleString()} $NAM`;
+      const message = `New Staking Transaction Complete! 🎉\nAmount: ${Number(totalUpdatedAmount)?.toLocaleString()} $NAM\nTotal Bonded: ${Number(totalVotingPower)?.toLocaleString()} $NAM\nAddress: ${account?.address}`;
       onCloseModal();
       await sendTelegramMessage(message);
     },
@@ -136,31 +137,6 @@ const IncrementBonding = ({
       return "Error: not enough balance";
     return "";
   })();
-
-  const sendTelegramMessage = async (message: string): Promise<void> => {
-    try {
-      const response = await fetch(
-        "https://namada-telegram-api-service.vercel.app/api/telegram",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ message }),
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          `Failed to send Telegram notification: ${JSON.stringify(errorData)}`
-        );
-      }
-    } catch (error) {
-      console.error("Error sending Telegram notification:", error);
-      throw error;
-    }
-  };
 
   return (
     <form
