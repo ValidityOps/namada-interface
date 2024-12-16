@@ -13,9 +13,16 @@ const ValidatorSplashPage = (): JSX.Element => {
   const validators = useAtomValue(allValidatorsAtom);
   const chainStatus = useAtomValue(chainStatusAtom);
 
-  const validatorList = validators.data!.filter((validator) =>
-    validator.alias?.includes("ValidityOps")
-  );
+  console.log("yooo");
+
+  const validatorList =
+    validators.isSuccess ?
+      (validators.data?.filter((validator) =>
+        validator.alias?.includes("ValidityOps")
+      ) ?? [])
+    : [];
+
+  const validatorData = validators?.data ?? [];
 
   const totalVotingPower = validatorList.reduce(
     (sum, validator) =>
@@ -44,14 +51,14 @@ const ValidatorSplashPage = (): JSX.Element => {
 
   // UseMemo to avoid remounting IncrementBonding unnecessarily
   const IncrementBondingMemo = useMemo(() => {
-    const totalNetworkStake = validators.data!.reduce(
+    const totalNetworkStake = validatorData.reduce(
       (sum, validator) =>
         sum.plus(validator.votingPowerInNAM || new BigNumber(0)),
       new BigNumber(0)
     );
 
-    const validityOps1Stake = validators
-      .data!.filter((validator) => validator.alias === "ValidityOps#1")
+    const validityOps1Stake = validatorData
+      .filter((validator) => validator.alias === "ValidityOps#1")
       .reduce(
         (sum, validator) =>
           sum.plus(validator.votingPowerInNAM || new BigNumber(0)),
