@@ -26,13 +26,13 @@ jobs:
 
       # Step 2: If the status was 404, send a Pushover notification
       - name: Send Pushover Notification
-        if: steps.check_site.outputs.status == '200'
+        if: steps.check_site.outputs.status != '200'
         run: |
           # Send a POST request to Pushover using the token and user key stored in GitHub Secrets.
           curl -s \
           --form-string "token=${{ secrets.PUSHOVER_TOKEN }}" \
           --form-string "user=${{ secrets.PUSHOVER_USER_KEY }}" \
-          --form-string "message=ALERT: The root route returned a 404!" \
+          --form-string "message=ALERT: ValidityOps is down!" \
           --form-string "title=Site Check Failure" \
           --form-string "priority=1" \
           https://api.pushover.net/1/messages.json
