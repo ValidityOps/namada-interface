@@ -83,14 +83,13 @@ export const StakingRewards = (): JSX.Element => {
       description: (
         <>
           Your rewards claim is being processed and will be staked to the same
-          validators afterward.
+          validator afterward.
         </>
       ),
     }),
     onSuccess: async () => {
       const message = `New Claim & Stake Transaction Complete! 🎉\nAmount: ${Number(availableRewards)?.toLocaleString()} $NAM\nTotal Bonded: ${Number(totalVotingPower)?.toLocaleString()} $NAM\nAddress: ${account?.address}`;
       await sendTelegramMessage(message);
-
       onCloseModal();
     },
   });
