@@ -128,6 +128,7 @@ export const createClaimAndStakeTx = async (
     wrapperTxProps: WrapperTxProps,
     props: ClaimRewardsProps | BondProps
   ): Promise<TxMsgValue> => {
+    console.log("wrapperTxProps", wrapperTxProps, props);
     if ("amount" in props) {
       // We have to force it in case: current balance < rewards to claim
       // This will still log the error msg in the terminal, unfortunately we can't do much about it

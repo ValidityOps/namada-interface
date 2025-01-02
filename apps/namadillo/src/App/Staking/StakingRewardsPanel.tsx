@@ -18,7 +18,7 @@ export const StakingRewardsPanel = (): JSX.Element => {
   const availableRewards =
     claimRewardsEnabled ?
       sumBigNumberArray(Object.values(rewards || {}))
-    : new BigNumber(0);
+    : new BigNumber(10);
   const title =
     claimRewardsEnabled ?
       "Unclaimed Staking Rewards"
@@ -48,7 +48,7 @@ export const StakingRewardsPanel = (): JSX.Element => {
           className="px-8"
           size="xs"
           backgroundColor="white"
-          disabled={!claimRewardsEnabled || availableRewards.eq(0)}
+          // disabled={!claimRewardsEnabled || availableRewards.eq(0)}
           onClick={() =>
             navigate(routes.stakingClaimRewards, {
               state: { backgroundLocation: location },

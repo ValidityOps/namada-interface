@@ -150,6 +150,16 @@ export const claimAndStakeRewardsAtom = atomWithMutation((get) => {
       gasConfig,
       account,
     }: BuildTxAtomParams<ClaimRewardsMsgValue>) => {
+      const stuff = Object.values(claimableRewards.data!);
+
+      console.log(
+        "claimableRewards.data",
+        Number(stuff),
+        chain.data,
+        account,
+        params,
+        gasConfig
+      );
       return createClaimAndStakeTx(
         chain.data!,
         account,
