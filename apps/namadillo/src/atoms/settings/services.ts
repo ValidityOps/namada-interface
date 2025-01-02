@@ -11,6 +11,7 @@ export const isIndexerAlive = async (url: string): Promise<boolean> => {
     const configuration = new Configuration({ basePath: url });
     const api = new DefaultApi(configuration);
     const response = await api.healthGet();
+    console.log("response", api, response);
     return response.status === 200;
   } catch {
     return false;

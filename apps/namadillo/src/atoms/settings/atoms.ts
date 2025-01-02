@@ -1,5 +1,6 @@
 import { isUrlValid, sanitizeUrl } from "@namada/utils";
 import { indexerRpcUrlAtom } from "atoms/chain";
+import axios from "axios";
 import { Getter, Setter, atom, getDefaultStore } from "jotai";
 import { atomWithMutation, atomWithQuery } from "jotai-tanstack-query";
 import { atomWithStorage } from "jotai/utils";
@@ -10,7 +11,6 @@ import {
   isMaspIndexerAlive,
   isRpcAlive,
 } from "./services";
-
 export type AttachStatus = "pending" | "attached" | "detached";
 export type ConnectStatus = "idle" | "connecting" | "connected" | "error";
 export const namadaExtensionAttachStatus = atom<AttachStatus>("pending");
@@ -118,8 +118,8 @@ export const rpcUrlAtom = atom((get) => {
   const userDefinedRpc = get(settingsAtom).rpcUrl;
   if (userDefinedRpc) return userDefinedRpc;
 
-  const tomlRpc = get(defaultServerConfigAtom).data?.rpc_url;
-  if (tomlRpc) return tomlRpc;
+  const tomlCycledRpc = get(cycleTomlRpcAtom).data; // may be undefined if still loading or errored
+  if (tomlCycledRpc) return tomlCycledRpc;
 
   const indexerRpc = get(indexerRpcUrlAtom).data;
   if (indexerRpc) return indexerRpc;
@@ -150,6 +150,52 @@ export const rpcHeartbeatAtom = atomWithQuery((get) => {
   };
 });
 
+export const cycleTomlRpcAtom = atomWithQuery((get) => {
+  const tomlRpcs = get(defaultServerConfigAtom).data?.rpc_url || [];
+  return {
+    queryKey: ["cycle-toml-rpc", tomlRpcs],
+    enabled: tomlRpcs.length > 0,
+    retry: false,
+    queryFn: async () => {
+      for (const url of tomlRpcs) {
+        console.log("Checking URL:", url);
+        try {
+          const response = await axios.get(url);
+          console.log("HTTP status:", response.status);
+          if (response.status === 200) return url; // Return the first healthy URL
+        } catch (error) {
+          console.log("Error or non-200 status for", url, error);
+        }
+      }
+      throw new Error("No healthy TOML RPC URLs found");
+    },
+  };
+});
+
+export const cycleTomlIndexerAtom = atomWithQuery((get) => {
+  const tomlIndexerUrls = get(defaultServerConfigAtom).data?.indexer_url || [];
+  return {
+    queryKey: ["cycle-toml-indexer", tomlIndexerUrls],
+    enabled: tomlIndexerUrls.length > 0,
+    retry: false,
+    queryFn: async () => {
+      for (const url of tomlIndexerUrls) {
+        console.log("Checking URL:", url);
+        try {
+          const response = await axios.get(`${url}/api/v1/pos/validator/all`);
+          console.log("HTTP status:", response.status);
+          if (response.status === 200) {
+            return url; // First healthy URL
+          }
+        } catch (e) {
+          console.log("Error or non-200 status for", url, e);
+        }
+      }
+      throw new Error("No healthy TOML indexer URLs found");
+    },
+  };
+});
+
 /**
  * Returns Indexer url
  * Priority: user defined indexer URL > TOML config
@@ -158,8 +204,8 @@ export const indexerUrlAtom = atom((get) => {
   const customIndexerUrl = get(settingsAtom).indexerUrl;
   if (customIndexerUrl) return customIndexerUrl;
 
-  const tomlIndexerUrl = get(defaultServerConfigAtom).data?.indexer_url;
-  if (tomlIndexerUrl) return tomlIndexerUrl;
+  const tomlCycledIndexer = get(cycleTomlIndexerAtom).data;
+  if (tomlCycledIndexer) return tomlCycledIndexer;
 
   return "";
 });

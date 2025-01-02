@@ -53,9 +53,9 @@ export type ChainSettings = {
 };
 
 export type SettingsTomlOptions = {
-  indexer_url?: string;
+  indexer_url?: string[];
   masp_indexer_url?: string;
-  rpc_url?: string;
+  rpc_url?: string[];
   localnet_enabled?: boolean;
 };
 
