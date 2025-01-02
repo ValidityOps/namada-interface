@@ -1,7 +1,7 @@
 rpc_url = ["https://namada-mainnet-rpc.itrocket.net:443", "https://namada-indexer.denodes.xyz/api/v1/chain/rpc-url"]
 indexer_url = [
-    "https://indexer.namada.tududes.com",
     "https://namada-mainnet-indexer.mellifera.network",
+    "https://indexer.namada.tududes.com",
     "https://namada-idx.emberstake.xyz",
 ]
 #masp_indexer_url = ""

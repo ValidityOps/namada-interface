@@ -2,7 +2,6 @@ import { indexerUrlAtom } from "atoms/settings";
 import { cycleTomlIndexerAtom, cycleTomlRpcAtom } from "atoms/settings/atoms";
 import { useAtomValue } from "jotai";
 import { ReactNode } from "react";
-import { Setup } from "../Common/Setup";
 
 export const IndexerLoader = ({
   children,
@@ -16,9 +15,9 @@ export const IndexerLoader = ({
   console.log("indexerUrl", indexerUrl);
   console.log("cycleTomlRpc", cycleTomlRpc);
 
-  if (!indexerUrl) {
-    return <Setup />;
-  }
+  // if (!indexerUrl) {
+  //   return <Setup />;
+  // }
 
   return <>{children}</>;
 };
