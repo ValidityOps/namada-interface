@@ -11,9 +11,6 @@ export const IndexerLoader = ({
   const indexerUrl = useAtomValue(indexerUrlAtom);
   const cycleTomlIndexer = useAtomValue(cycleTomlIndexerAtom);
   const cycleTomlRpc = useAtomValue(cycleTomlRpcAtom);
-  console.log("cycleTomlIndexer", cycleTomlIndexer);
-  console.log("indexerUrl", indexerUrl);
-  console.log("cycleTomlRpc", cycleTomlRpc);
 
   // if (!indexerUrl) {
   //   return <Setup />;

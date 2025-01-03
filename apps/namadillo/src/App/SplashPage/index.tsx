@@ -8,6 +8,7 @@ import { BigNumber } from "bignumber.js";
 import { useAtomValue } from "jotai";
 import { useMemo } from "react";
 import validityOpsLogo from "./assets/validitylogo.png";
+import EpochCard from "./EpochCard";
 
 const ValidatorSplashPage = (): JSX.Element => {
   const validators = useAtomValue(allValidatorsAtom);
@@ -128,14 +129,7 @@ const ValidatorSplashPage = (): JSX.Element => {
               {Number(commission.multipliedBy(100).toFixed(2))}%
             </p>
           </div>
-          <div className="p-6 bg-[#261b51] border-4 border-[#3f65a3] rounded-lg">
-            <h2 className="text-xl font-semibold text-[#3f65a3]">
-              Current Epoch
-            </h2>
-            <p className="text-3xl font-bold text-[#48b9d2] mt-4">
-              {chainStatus?.epoch || "-"}
-            </p>
-          </div>
+          <EpochCard />
         </div>
         <div className="mb-2">
           <StakingSummary />

@@ -157,10 +157,8 @@ export const cycleTomlRpcAtom = atomWithQuery((get) => {
     retry: false,
     queryFn: async () => {
       for (const url of tomlRpcs) {
-        console.log("Checking URL:", url);
         try {
           const response = await axios.get(url);
-          console.log("HTTP status:", response.status);
           if (response.status === 200) return url; // Return the first healthy URL
         } catch (error) {
           console.log("Error or non-200 status for", url, error);
@@ -179,10 +177,8 @@ export const cycleTomlIndexerAtom = atomWithQuery((get) => {
     retry: false,
     queryFn: async () => {
       for (const url of tomlIndexerUrls) {
-        console.log("Checking URL:", url);
         try {
           const response = await axios.get(`${url}/api/v1/pos/validator/all`);
-          console.log("HTTP status:", response.status);
           if (response.status === 200) {
             return url; // First healthy URL
           }

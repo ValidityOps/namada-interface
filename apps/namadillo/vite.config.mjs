@@ -8,6 +8,13 @@ import tsconfigPaths from "vite-tsconfig-paths";
 export default defineConfig(() => {
   return {
     server: {
+      proxy: {
+        "/namada": {
+          target: "https://explorer75.org",
+          changeOrigin: true,
+          secure: false,
+        },
+      },
       headers: {
         "Cross-Origin-Opener-Policy": "same-origin",
         "Cross-Origin-Embedder-Policy": "require-corp",
