@@ -107,7 +107,7 @@ const EpochCard: React.FC = () => {
     <div className="p-6 bg-[#261b51] border-4 border-[#3f65a3] rounded-lg max-w-sm">
       <h2 className="text-xl font-semibold text-[#3f65a3]">Current Epoch</h2>
 
-      {timeLeft !== DEFAULT_TIME_LEFT && (
+      {timeLeft !== DEFAULT_TIME_LEFT ?
         <>
           <div className="flex justify-between">
             <p className="text-3xl font-bold text-[#48b9d2] mt-4">{epoch}</p>
@@ -126,7 +126,8 @@ const EpochCard: React.FC = () => {
             {progress.toFixed(1)}% Complete
           </p>
         </>
-      )}
+      : <p className="text-3xl font-bold text-[#48b9d2] mt-4">{"Loading..."}</p>
+      }
     </div>
   );
 };
