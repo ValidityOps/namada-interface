@@ -154,10 +154,17 @@ const findCounterpartChainName = (
       ourChainNumber: "chain_1" | "chain_2"
     ): string | undefined => {
       if (curr[ourChainNumber].chain_name === chainName) {
-        const match = curr.channels.some((channelEntry) => {
-          const { port_id, channel_id } = channelEntry[ourChainNumber];
-          return port_id === portId && channel_id === channelId;
-        });
+        const match = curr.channels.some(
+          (channelEntry: {
+            [key in "chain_1" | "chain_2"]: {
+              port_id: string;
+              channel_id: string;
+            };
+          }) => {
+            const { port_id, channel_id } = channelEntry[ourChainNumber];
+            return port_id === portId && channel_id === channelId;
+          }
+        );
 
         if (match) {
           const theirChainNumber =
@@ -404,6 +411,7 @@ export const namadaLocal = (chainId: string): Chain => ({
   ...internalDevnetChain,
   chain_name: "localnet",
   chain_id: chainId,
+  chain_type: "namada" as "cosmos", // :D you suck typescript
 });
 
 export const namadaLocalAsset = (tokenAddress: string): AssetList => ({
