@@ -104,7 +104,7 @@ const EpochCard: React.FC = () => {
   }, []);
 
   return (
-    <div className="p-6 bg-[#261b51] border-4 border-[#3f65a3] rounded-lg max-w-sm">
+    <div className="p-6 bg-[#261b51] border-4 border-[#3f65a3] rounded-lg w-full">
       <h2 className="text-xl font-semibold text-[#3f65a3]">Current Epoch</h2>
 
       {timeLeft !== DEFAULT_TIME_LEFT ?

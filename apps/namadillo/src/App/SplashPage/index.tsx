@@ -108,13 +108,13 @@ const ValidatorSplashPage = (): JSX.Element => {
           />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
           <div className="p-6 bg-[#261b51] border-4 border-[#3f65a3] rounded-lg">
             <h2 className="text-xl font-semibold text-[#3f65a3]">
               Total Voting Power
             </h2>
             <p className="text-3xl font-bold text-[#48b9d2] mt-4">
-              {totalVotingPower.toFormat(2)} NAM
+              {totalVotingPower.toFormat(0)} NAM
             </p>
           </div>
           <div className="p-6 bg-[#261b51] border-4 border-[#3f65a3] rounded-lg">
