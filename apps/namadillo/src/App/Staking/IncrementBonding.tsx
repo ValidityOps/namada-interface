@@ -3,7 +3,7 @@ import { BondMsgValue } from "@namada/types";
 import { AtomErrorBoundary } from "App/Common/AtomErrorBoundary";
 import { NamCurrency } from "App/Common/NamCurrency";
 import { TableRowLoading } from "App/Common/TableRowLoading";
-import { TransactionFees } from "App/Common/TransactionFees";
+import { TransactionFeeButton } from "App/Common/TransactionFeeButton";
 import { sendTelegramMessage } from "App/SplashPage/utils";
 import { accountBalanceAtom, defaultAccountAtom } from "atoms/accounts";
 import { chainParametersAtom } from "atoms/chain";
@@ -236,10 +236,9 @@ const IncrementBonding = ({
               {isPerformingBonding ? "Processing..." : errorMessage || "Stake"}
             </ActionButton>
             {gasConfig && (
-              <TransactionFees
-                className="justify-self-end px-4"
-                gasConfig={gasConfig}
-              />
+              <div className="justify-self-end px-4">
+                <TransactionFeeButton gasConfig={gasConfig} />
+              </div>
             )}
           </>
         )}

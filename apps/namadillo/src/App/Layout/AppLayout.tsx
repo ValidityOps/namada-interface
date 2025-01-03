@@ -1,3 +1,5 @@
+import { FixedWarningBanner } from "App/Common/FixedWarningBanner";
+import { useCompatibilityErrors } from "hooks/useCompatibilityErrors";
 import { ReactNode, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { twMerge } from "tailwind-merge";
@@ -13,6 +15,7 @@ export const AppLayout = ({
   const [displayNavigation, setDisplayNavigation] = useState(false);
   const location = useLocation();
   const isRootRoute = location.pathname === "/";
+  const compatibilityErrors = useCompatibilityErrors();
 
   if (isRootRoute) {
     return <main className="min-h-full">{children}</main>;
@@ -49,6 +52,7 @@ export const AppLayout = ({
         </aside>
         <main className="min-h-full">{children}</main>
       </div>
+      <FixedWarningBanner errorMessage={compatibilityErrors} />
     </div>
   );
 };
