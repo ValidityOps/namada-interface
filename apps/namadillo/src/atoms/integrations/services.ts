@@ -8,6 +8,8 @@ import {
   assertIsDeliverTxSuccess,
   calculateFee,
 } from "@cosmjs/stargate";
+import { TxRaw } from "cosmjs-types/cosmos/tx/v1beta1/tx";
+
 import { getIndexerApi } from "atoms/api";
 import { queryForAck, queryForIbcTimeout } from "atoms/transactions";
 import BigNumber from "bignumber.js";
@@ -23,8 +25,9 @@ import {
   TransferStep,
 } from "types";
 import { toBaseAmount } from "utils";
+import { getKeplrWallet } from "utils/ibc";
 import { getSdkInstance } from "utils/sdk";
-import { workingRpcsAtom } from "./atoms";
+import { rpcByChainAtom } from "./atoms";
 import { getRpcByIndex } from "./functions";
 
 type CommonParams = {
@@ -46,7 +49,7 @@ type ShieldedParams = CommonParams & {
 
 export type IbcTransferParams = TransparentParams | ShieldedParams;
 
-const getShieldedArgs = async (
+export const getShieldedArgs = async (
   target: string,
   token: string,
   amount: BigNumber,
@@ -82,25 +85,30 @@ export const queryAssetBalances = async (
   }));
 };
 
-export const submitIbcTransfer = async (
+export const createStargateClient = async (
   rpc: string,
-  transferParams: IbcTransferParams
-): Promise<DeliverTxResponse> => {
-  const {
-    signer,
-    sourceAddress,
-    destinationAddress,
-    amount: displayAmount,
-    asset,
-    sourceChannelId,
-    isShielded,
-    gasConfig,
-  } = transferParams;
-
-  const client = await SigningStargateClient.connectWithSigner(rpc, signer, {
+  chain: Chain
+): Promise<SigningStargateClient> => {
+  const keplr = getKeplrWallet();
+  const signer = keplr.getOfflineSigner(chain.chain_id);
+  return await SigningStargateClient.connectWithSigner(rpc, signer, {
     broadcastPollIntervalMs: 300,
     broadcastTimeoutMs: 8_000,
   });
+};
+
+export const getSignedMessage = async (
+  client: SigningStargateClient,
+  transferParams: IbcTransferParams,
+  maspCompatibleMemo: string = ""
+): Promise<TxRaw> => {
+  const {
+    sourceAddress,
+    amount: displayAmount,
+    asset,
+    sourceChannelId,
+    gasConfig,
+  } = transferParams;
 
   // cosmjs expects amounts to be represented in the base denom, so convert
   const baseAmount = toBaseAmount(asset.asset, displayAmount);
@@ -110,60 +118,52 @@ export const submitIbcTransfer = async (
     `${gasConfig.gasPrice.toString()}${gasConfig.gasToken}`
   );
 
-  const token = asset.originalAddress;
-  const { receiver, memo }: { receiver: string; memo?: string } =
-    isShielded ?
-      await getShieldedArgs(
-        destinationAddress,
-        token,
-        baseAmount,
-        transferParams.destinationChannelId
-      )
-    : { receiver: destinationAddress };
-
   const transferMsg = createIbcTransferMessage(
     sourceChannelId,
     sourceAddress,
-    receiver,
+    transferParams.destinationAddress,
     baseAmount,
     asset.originalAddress,
-    memo
+    maspCompatibleMemo
   );
 
-  const response = await client.signAndBroadcast(
-    sourceAddress,
-    [transferMsg],
-    fee
-  );
+  return await client.sign(sourceAddress, [transferMsg], fee, "");
+};
 
+export const broadcastIbcTransaction = async (
+  client: SigningStargateClient,
+  tx: TxRaw
+): Promise<DeliverTxResponse> => {
+  const txBytes = TxRaw.encode(tx).finish();
+  const response = await client.broadcastTx(txBytes);
   assertIsDeliverTxSuccess(response);
   return response;
 };
 
 export const queryAndStoreRpc = async <T>(
   chain: Chain,
-  queryFn: QueryFn<T>,
-  rpcIndex = 0
+  queryFn: QueryFn<T>
 ): Promise<T> => {
   const { get, set } = getDefaultStore();
-  const workingRpcs = get(workingRpcsAtom);
-  const rpcAddress =
-    chain.chain_id in workingRpcs ?
-      workingRpcs[chain.chain_id]
-    : getRpcByIndex(chain, rpcIndex);
+  const lastRpc = get(rpcByChainAtom) || {};
+  const rpc =
+    chain.chain_id in lastRpc ?
+      lastRpc[chain.chain_id]
+    : getRpcByIndex(chain, 0);
 
   try {
-    const output = await queryFn(rpcAddress);
-    set(workingRpcsAtom, {
-      ...workingRpcs,
-      [chain.chain_id]: rpcAddress,
+    const output = await queryFn(rpc.address);
+    set(rpcByChainAtom, {
+      ...lastRpc,
+      [chain.chain_id]: { ...rpc },
     });
     return output;
   } catch (err) {
-    if (chain.chain_id in workingRpcs) {
-      delete workingRpcs[chain.chain_id];
-      set(workingRpcsAtom, { ...workingRpcs });
-    }
+    // On error, saves the next available rpc
+    set(rpcByChainAtom, {
+      ...lastRpc,
+      [chain.chain_id]: getRpcByIndex(chain, rpc.index + 1),
+    });
     throw err;
   }
 };
@@ -184,6 +184,15 @@ export const updateIbcTransferStatus = async (
       currentStep: TransferStep.Complete,
       resultTxHash: successQueries[0].hash,
     });
+
+    window.dispatchEvent(
+      new CustomEvent(`IbcTransfer.Success`, {
+        detail: {
+          ...(tx as IbcTransferTransactionData),
+        },
+      })
+    );
+
     return;
   }
 
@@ -194,6 +203,12 @@ export const updateIbcTransferStatus = async (
       errorMessage: "Transaction timed out",
       resultTxHash: timeoutQuery[0].hash,
     });
+
+    window.dispatchEvent(
+      new CustomEvent(`IbcTransfer.Error`, {
+        detail: { ...(tx as IbcTransferTransactionData) },
+      })
+    );
   }
 };
 
@@ -216,6 +231,11 @@ export const updateIbcWithdrawalStatus = async (
       status: "success",
       currentStep: TransferStep.Complete,
     });
+    window.dispatchEvent(
+      new CustomEvent(`IbcTransfer.Success`, {
+        detail: { ...(tx as IbcTransferTransactionData) },
+      })
+    );
     return;
   }
 
@@ -224,6 +244,11 @@ export const updateIbcWithdrawalStatus = async (
       status: "error",
       errorMessage: "IBC Withdraw failed",
     });
+    window.dispatchEvent(
+      new CustomEvent(`IbcTransfer.Error`, {
+        detail: { ...(tx as IbcTransferTransactionData) },
+      })
+    );
   }
 };
 
