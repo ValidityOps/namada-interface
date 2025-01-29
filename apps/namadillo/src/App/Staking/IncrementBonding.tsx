@@ -73,7 +73,7 @@ const IncrementBonding = ({
 
   const {
     execute: performBonding,
-    gasConfig,
+    feeProps,
     isEnabled,
     isPending: isPerformingBonding,
   } = useTransaction({
@@ -89,14 +89,11 @@ const IncrementBonding = ({
         </>
       ),
     }),
-    parseErrorTxNotification: (err?: unknown) => {
-      return {
-        title: "Staking transaction failed",
-        description: "",
-      };
-    },
-
-    onSuccess: async () => {
+    parseErrorTxNotification: () => ({
+      title: "Staking transaction failed",
+      description: "",
+    }),
+    onBroadcasted: async () => {
       const message = `New Staking Transaction Complete! 🎉\nAmount: ${Number(totalUpdatedAmount)?.toLocaleString()} $NAM\nTotal Bonded: ${Number(totalVotingPower)?.toLocaleString()} $NAM\nAddress: ${account?.address}`;
       onCloseModal();
       await sendTelegramMessage(message);
@@ -235,11 +232,9 @@ const IncrementBonding = ({
             >
               {isPerformingBonding ? "Processing..." : errorMessage || "Stake"}
             </ActionButton>
-            {gasConfig && (
-              <div className="justify-self-end px-4">
-                <TransactionFeeButton gasConfig={gasConfig} />
-              </div>
-            )}
+            <div className="justify-self-end px-4">
+              <TransactionFeeButton feeProps={feeProps} />
+            </div>
           </>
         )}
       </div>

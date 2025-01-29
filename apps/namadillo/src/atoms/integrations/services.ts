@@ -1,20 +1,21 @@
-import { Chain } from "@chain-registry/types";
+import { Chain, IBCInfo } from "@chain-registry/types";
 import { OfflineSigner } from "@cosmjs/launchpad";
 import {
+  assertIsDeliverTxSuccess,
+  calculateFee,
   DeliverTxResponse,
+  MsgTransferEncodeObject,
   SigningStargateClient,
   StargateClient,
   StdFee,
-  assertIsDeliverTxSuccess,
-  calculateFee,
 } from "@cosmjs/stargate";
 import { TxRaw } from "cosmjs-types/cosmos/tx/v1beta1/tx";
 
+import { sanitizeUrl } from "@namada/utils";
 import { getIndexerApi } from "atoms/api";
 import { queryForAck, queryForIbcTimeout } from "atoms/transactions";
 import BigNumber from "bignumber.js";
 import { getDefaultStore } from "jotai";
-import { createIbcTransferMessage } from "lib/transactions";
 import toml from "toml";
 import {
   AddressWithAsset,
@@ -24,11 +25,15 @@ import {
   LocalnetToml,
   TransferStep,
 } from "types";
-import { toBaseAmount } from "utils";
 import { getKeplrWallet } from "utils/ibc";
 import { getSdkInstance } from "utils/sdk";
 import { rpcByChainAtom } from "./atoms";
-import { getRpcByIndex } from "./functions";
+import {
+  getChainRegistryIbcFilePath,
+  getChannelFromIbcInfo,
+  getRpcByIndex,
+  IbcChannels,
+} from "./functions";
 
 type CommonParams = {
   signer: OfflineSigner;
@@ -99,35 +104,14 @@ export const createStargateClient = async (
 
 export const getSignedMessage = async (
   client: SigningStargateClient,
-  transferParams: IbcTransferParams,
-  maspCompatibleMemo: string = ""
+  transferMsg: MsgTransferEncodeObject,
+  gasConfig: GasConfig
 ): Promise<TxRaw> => {
-  const {
-    sourceAddress,
-    amount: displayAmount,
-    asset,
-    sourceChannelId,
-    gasConfig,
-  } = transferParams;
-
-  // cosmjs expects amounts to be represented in the base denom, so convert
-  const baseAmount = toBaseAmount(asset.asset, displayAmount);
-
   const fee: StdFee = calculateFee(
-    gasConfig.gasLimit.toNumber(),
+    Math.ceil(gasConfig.gasLimit.toNumber()),
     `${gasConfig.gasPrice.toString()}${gasConfig.gasToken}`
   );
-
-  const transferMsg = createIbcTransferMessage(
-    sourceChannelId,
-    sourceAddress,
-    transferParams.destinationAddress,
-    baseAmount,
-    asset.originalAddress,
-    maspCompatibleMemo
-  );
-
-  return await client.sign(sourceAddress, [transferMsg], fee, "");
+  return await client.sign(transferMsg.value.sender!, [transferMsg], fee, "");
 };
 
 export const broadcastIbcTransaction = async (
@@ -223,7 +207,6 @@ export const updateIbcWithdrawalStatus = async (
   if (!tx.hash) throw "Transaction hash not defined";
   const response = await api.apiV1IbcTxIdStatusGet(tx.hash);
 
-  //@ts-expect-error Indexer not providing correct type
   const { status } = response.data;
 
   if (status === "success") {
@@ -255,4 +238,37 @@ export const updateIbcWithdrawalStatus = async (
 export const fetchLocalnetTomlConfig = async (): Promise<LocalnetToml> => {
   const response = await fetch("/localnet-config.toml");
   return toml.parse(await response.text()) as LocalnetToml;
+};
+
+export const fetchIbcChannelFromRegistry = async (
+  currentNamadaChainId: string,
+  ibcChainName: string,
+  namadaChainRegistryUrl: string
+): Promise<IbcChannels | null> => {
+  const ibcFilePath = getChainRegistryIbcFilePath(
+    currentNamadaChainId,
+    ibcChainName
+  );
+
+  const queryUrl = new URL(
+    ibcFilePath,
+    sanitizeUrl(namadaChainRegistryUrl) + "/"
+  );
+
+  const channelInfo: IBCInfo = await (await fetch(queryUrl.toString())).json();
+  return getChannelFromIbcInfo(ibcChainName, channelInfo) || null;
+};
+
+export const simulateIbcTransferFee = async (
+  stargateClient: SigningStargateClient,
+  sourceAddress: string,
+  transferMsg: MsgTransferEncodeObject,
+  additionalPercentage: number = 0.05
+): Promise<number> => {
+  const estimatedGas = await stargateClient.simulate(
+    sourceAddress!,
+    [transferMsg],
+    undefined
+  );
+  return estimatedGas * (1 + additionalPercentage);
 };

@@ -40,7 +40,6 @@ export type GasConfig = {
   gasLimit: GasLimit;
   gasPrice: GasPrice;
   gasToken: GasToken;
-  asset?: Asset;
 };
 
 export type TxGas = Record<Address, GasLimit>;
@@ -235,22 +234,25 @@ export enum TransferStep {
 // Defines the steps in the Namada <> Namada transfer progress for tracking transaction stages.
 export const namadaTransferStages = {
   TransparentToShielded: [
-    TransferStep.Sign,
     TransferStep.ZkProof,
+    TransferStep.Sign,
     TransferStep.TransparentToShielded,
     TransferStep.Complete,
   ] as const,
   ShieldedToTransparent: [
+    TransferStep.ZkProof,
     TransferStep.Sign,
     TransferStep.ShieldedToTransparent,
     TransferStep.Complete,
   ] as const,
   ShieldedToShielded: [
+    TransferStep.ZkProof,
     TransferStep.Sign,
     TransferStep.ShieldedToShielded,
     TransferStep.Complete,
   ] as const,
   TransparentToTransparent: [
+    TransferStep.ZkProof,
     TransferStep.Sign,
     TransferStep.TransparentToTransparent,
     TransferStep.Complete,
@@ -372,10 +374,4 @@ export type LocalnetToml = {
   token_address: string;
   chain_1_channel: string;
   chain_2_channel: string;
-};
-
-// TODO: remove this after indexer swagger gets fixed
-export type TempIndexerHealthType = {
-  version: string;
-  commit: string;
 };

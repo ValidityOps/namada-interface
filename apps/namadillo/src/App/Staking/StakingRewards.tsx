@@ -65,7 +65,7 @@ export const StakingRewards = (): JSX.Element => {
       title: "Claim rewards transaction is in progress",
       description: <>Your rewards claim is being processed</>,
     }),
-    onSuccess: () => {
+    onBroadcasted: () => {
       onCloseModal();
     },
   });
@@ -87,7 +87,7 @@ export const StakingRewards = (): JSX.Element => {
         </>
       ),
     }),
-    onSuccess: async () => {
+    onBroadcasted: async () => {
       const message = `New Claim & Stake Transaction Complete! 🎉\nAmount: ${Number(availableRewards)?.toLocaleString()} $NAM\nTotal Bonded: ${Number(totalVotingPower)?.toLocaleString()} $NAM\nAddress: ${account?.address}`;
       await sendTelegramMessage(message);
       onCloseModal();

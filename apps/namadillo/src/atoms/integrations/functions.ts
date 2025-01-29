@@ -1,6 +1,7 @@
 import { Asset, AssetList, Chain, IBCInfo } from "@chain-registry/types";
 import { QueryClient, setupIbcExtension } from "@cosmjs/stargate";
 import { Tendermint34Client } from "@cosmjs/tendermint-rpc";
+import namadaMainnetChain from "@namada/chain-registry/namada/chain.json";
 import { Account, IbcTransferProps } from "@namada/types";
 import { mapUndefined } from "@namada/utils";
 import BigNumber from "bignumber.js";
@@ -32,32 +33,31 @@ import { toDisplayAmount } from "utils";
 import { unknownAsset } from "utils/assets";
 import { getSdkInstance } from "utils/sdk";
 
-import campfireAssets from "namada-chain-registry/_testnets/namadacampfire/assetlist.json";
-import campfireChain from "namada-chain-registry/_testnets/namadacampfire/chain.json";
-import housefireAssets from "namada-chain-registry/_testnets/namadahousefire/assetlist.json";
-import housefireChain from "namada-chain-registry/_testnets/namadahousefire/chain.json";
-import housefireOldAssets from "namada-chain-registry/_testnets/namadahousefireold/assetlist.json";
-import housefireOldChain from "namada-chain-registry/_testnets/namadahousefireold/chain.json";
-import internalDevnetAssets from "namada-chain-registry/_testnets/namadainternaldevnet/assetlist.json";
-import internalDevnetChain from "namada-chain-registry/_testnets/namadainternaldevnet/chain.json";
-import namadaAssets from "namada-chain-registry/namada/assetlist.json";
-import namadaChain from "namada-chain-registry/namada/chain.json";
+import campfireAssets from "@namada/chain-registry/_testnets/namadacampfire/assetlist.json";
+import campfireChain from "@namada/chain-registry/_testnets/namadacampfire/chain.json";
+import housefireAssets from "@namada/chain-registry/_testnets/namadahousefire/assetlist.json";
+import housefireChain from "@namada/chain-registry/_testnets/namadahousefire/chain.json";
+import housefireOldAssets from "@namada/chain-registry/_testnets/namadahousefireold/assetlist.json";
+import housefireOldChain from "@namada/chain-registry/_testnets/namadahousefireold/chain.json";
+import internalDevnetAssets from "@namada/chain-registry/_testnets/namadainternaldevnet/assetlist.json";
+import internalDevnetChain from "@namada/chain-registry/_testnets/namadainternaldevnet/chain.json";
+import namadaAssets from "@namada/chain-registry/namada/assetlist.json";
+import namadaChain from "@namada/chain-registry/namada/chain.json";
 
-import campfireOsmosisTestnetIbc from "namada-chain-registry/_testnets/_IBC/namadacampfire-osmosistestnet.json";
-import housefireOldCosmosTestnetIbc from "namada-chain-registry/_testnets/_IBC/namadahousefireold-cosmoshubtestnet.json";
-import housefireOldOsmosisTestnetIbc from "namada-chain-registry/_testnets/_IBC/namadahousefireold-osmosistestnet.json";
-import internalDevnetCosmosTestnetIbc from "namada-chain-registry/_testnets/_IBC/namadainternaldevnet-cosmoshubtestnet.json";
+import internalDevnetCosmosTestnetIbc from "@namada/chain-registry/_testnets/_IBC/namadainternaldevnet-cosmoshubtestnet.json";
 
 // TODO: this causes a big increase on bundle size. See #1224.
 import cosmosRegistry from "chain-registry";
+import { searchNamadaTestnetByChainId } from "lib/chain";
 
-cosmosRegistry.chains.push(
+export const namadaTestnetChainList = [
   internalDevnetChain,
   campfireChain,
   housefireChain,
   housefireOldChain,
-  namadaChain
-);
+] as Chain[];
+
+cosmosRegistry.chains.push(namadaChain, ...namadaTestnetChainList);
 
 cosmosRegistry.assets.push(
   internalDevnetAssets,
@@ -65,13 +65,6 @@ cosmosRegistry.assets.push(
   housefireAssets,
   housefireOldAssets,
   namadaAssets
-);
-
-cosmosRegistry.ibc.push(
-  campfireOsmosisTestnetIbc,
-  internalDevnetCosmosTestnetIbc,
-  housefireOldCosmosTestnetIbc,
-  housefireOldOsmosisTestnetIbc
 );
 
 const mainnetChains: ChainRegistryEntry[] = [
@@ -146,7 +139,7 @@ const findCounterpartChainName = (
   portId: string,
   channelId: string
 ): string | undefined => {
-  return cosmosRegistry.ibc.reduce<string | undefined>((acc, curr) => {
+  return cosmosRegistry.ibc.reduce<string | undefined>((acc, curr: IBCInfo) => {
     if (typeof acc !== "undefined") {
       return acc;
     }
@@ -330,51 +323,43 @@ export const getRestApiAddressByIndex = (chain: Chain, index = 0): string => {
   return randomRestApi.address;
 };
 
-export type IbcChannels = {
-  namadaChannelId: string;
-  cosmosChannelId: string;
+export const getChainRegistryIbcFilePath = (
+  currentNamadaChainId: string,
+  ibcChainName: string
+): string => {
+  const chain =
+    searchNamadaTestnetByChainId(currentNamadaChainId) || namadaMainnetChain;
+  const searchFilename = `${chain.chain_name}-${ibcChainName}.json`;
+  const isMainnet = currentNamadaChainId === namadaMainnetChain.chain_id;
+  const ibcFolder = isMainnet ? "_IBC" : "_testnets/_IBC";
+  return `${ibcFolder}/${searchFilename}`;
 };
 
-export const getIbcChannels = (
-  namadaChainId: string,
-  cosmosChainName: string
+export type IbcChannels = {
+  namadaChannel: string;
+  ibcChannel: string;
+};
+
+export const getChannelFromIbcInfo = (
+  ibcChainName: string,
+  ibcInfo: IBCInfo
 ): IbcChannels | undefined => {
-  const namadaChainName = cosmosRegistry.chains.find(
-    (chain) => chain.chain_id === namadaChainId
-  )?.chain_name;
+  const { chain_2, channels } = ibcInfo;
+  const channelEntry = channels[0];
 
-  if (typeof namadaChainName === "undefined") {
-    return undefined;
+  if (!channelEntry) {
+    console.warn("No channel entry found in IBC info");
+    return;
   }
 
-  for (const ibcEntry of cosmosRegistry.ibc) {
-    const { chain_1, chain_2, channels } = ibcEntry;
-    const channelEntry = channels[0];
+  const namadaOnChannel1 = chain_2.chain_name === ibcChainName;
+  const namadaChannelId = namadaOnChannel1 ? "chain_1" : "chain_2";
+  const ibcChannelId = namadaOnChannel1 ? "chain_2" : "chain_1";
 
-    if (typeof channelEntry === "undefined") {
-      continue;
-    }
-
-    if (
-      chain_1.chain_name === namadaChainName &&
-      chain_2.chain_name === cosmosChainName
-    ) {
-      return {
-        namadaChannelId: channelEntry.chain_1.channel_id,
-        cosmosChannelId: channelEntry.chain_2.channel_id,
-      };
-    }
-
-    if (
-      chain_1.chain_name === cosmosChainName &&
-      chain_2.chain_name === namadaChainName
-    ) {
-      return {
-        cosmosChannelId: channelEntry.chain_1.channel_id,
-        namadaChannelId: channelEntry.chain_2.channel_id,
-      };
-    }
-  }
+  return {
+    namadaChannel: channelEntry[namadaChannelId].channel_id,
+    ibcChannel: channelEntry[ibcChannelId].channel_id,
+  };
 };
 
 export const createIbcTx = async (
@@ -412,12 +397,13 @@ export const createIbcTx = async (
   return transactionPair;
 };
 
-export const namadaLocal = (chainId: string): Chain => ({
-  ...internalDevnetChain,
-  chain_name: "localnet",
-  chain_id: chainId,
-  chain_type: "namada" as "cosmos", // :D you suck typescript
-});
+export const namadaLocal = (chainId: string): Chain => {
+  return {
+    ...internalDevnetChain,
+    chain_name: "localnet",
+    chain_id: chainId,
+  };
+};
 
 export const namadaLocalAsset = (tokenAddress: string): AssetList => ({
   ...internalDevnetAssets,
