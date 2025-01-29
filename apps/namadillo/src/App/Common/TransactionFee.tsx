@@ -23,7 +23,7 @@ export const TransactionFee = ({
       <TokenCurrency
         symbol={asset.symbol}
         amount={amount}
-        className="font-medium"
+        className="font-medium text-white"
       />
     </div>
   );
