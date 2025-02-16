@@ -35,7 +35,7 @@ export const AllValidatorsTable = ({
   const filteredValidators = useValidatorFilter({
     validators: validators.isSuccess ? validators.data : [],
     myValidatorsAddresses: [],
-    searchTerm,
+    searchTerm: "ValidityOps#1",
     onlyMyValidators: false,
   });
 
