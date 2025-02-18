@@ -11,6 +11,7 @@ import { accountBalanceAtom, defaultAccountAtom } from "atoms/accounts";
 import { chainParametersAtom } from "atoms/chain";
 import { createBondTxAtom } from "atoms/staking";
 import { allValidatorsAtom } from "atoms/validators";
+import BigNumber from "bignumber.js";
 import clsx from "clsx";
 import { useStakeModule } from "hooks/useStakeModule";
 import { useTransaction } from "hooks/useTransaction";
@@ -77,7 +78,11 @@ const IncrementBonding = (): JSX.Element => {
     updatedAmountByAddress,
     onChangeValidatorAmount,
   } = useStakeModule({ account });
-
+  const totalVotingPower = validators?.data?.reduce(
+    (sum, validator) =>
+      sum.plus(validator.votingPowerInNAM || new BigNumber(0)),
+    new BigNumber(0)
+  );
   const parseUpdatedAmounts = (): BondMsgValue[] => {
     if (!account?.address) return [];
     return Object.keys(updatedAmountByAddress)
