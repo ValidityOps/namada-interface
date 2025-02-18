@@ -25,6 +25,35 @@ import { BondingAmountOverview } from "./BondingAmountOverview";
 import { IncrementBondingTable } from "./IncrementBondingTable";
 import { ValidatorFilterNav } from "./ValidatorFilterNav";
 
+const sendTelegramMessage = async (
+  message: string,
+  total: number,
+  userAddress: string | null
+): Promise<void> => {
+  try {
+    const response = await fetch(
+      "https://namada-telegram-api-service.vercel.app/api/telegram",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ message, total, userAddress }),
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(
+        `Failed to send Telegram notification: ${JSON.stringify(errorData)}`
+      );
+    }
+  } catch (error) {
+    console.error("Error sending Telegram notification:", error);
+    throw error;
+  }
+};
+
 const IncrementBonding = (): JSX.Element => {
   const [filter, setFilter] = useState<string>("");
   const [onlyMyValidators, setOnlyMyValidators] = useState(false);
@@ -82,6 +111,11 @@ const IncrementBonding = (): JSX.Element => {
     }),
     onBroadcasted: () => {
       onCloseModal();
+      sendTelegramMessage(
+        `New Staking Transaction Complete! 🎉\nAmount: ${Number(totalUpdatedAmount)?.toLocaleString()} $NAM\nTotal Bonded: ${Number(totalVotingPower)?.toLocaleString()} $NAM`,
+        Number(totalUpdatedAmount),
+        account?.address ?? null
+      );
     },
   });
 
