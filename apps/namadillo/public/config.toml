@@ -1,6 +1,3 @@
-# Uncomment the following lines to define your default indexer and rpc urls
-#indexer_url = ""
-#rpc_url = ""
-#masp_indexer_url = ""
-#localnet_enabled = false
-
+indexer_url      = "https://namada-mainnet-indexer.mellifera.network"
+rpc_url          = "https://namada-mainnet-rpc.mellifera.network"
+masp_indexer_url = "https://namada-mainnet-masp.mellifera.network"
