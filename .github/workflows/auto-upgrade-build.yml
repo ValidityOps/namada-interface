@@ -50,11 +50,14 @@ jobs:
           git checkout main
           git merge upstream/main --no-edit
 
-      # 6. Build the Namadillo app.
+      # 6. Build the Namadillo app with updated commands.
       - name: Build Namadillo app
         if: steps.check.outputs.found == 'true'
         run: |
           cd apps/namadillo
+          yarn
+          yarn wasm:build
+          yarn wasm:build:dev
           yarn install
           yarn build
 
