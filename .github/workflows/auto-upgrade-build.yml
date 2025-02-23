@@ -18,11 +18,11 @@ jobs:
         with:
           node-version: "16"
 
-      # 3. (Optional) Install additional dependencies for Puppeteer.
+      # 3. Install Puppeteer dependencies (removed libasound2 to avoid install errors).
       - name: Install Puppeteer dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libnss3 libatk-bridge2.0-0 libx11-xcb1 libxcomposite1 libxrandr2 libasound2
+          sudo apt-get install -y libnss3 libatk-bridge2.0-0 libx11-xcb1 libxcomposite1 libxrandr2
 
       # 4. Use Puppeteer to check if the website shows the update text.
       - name: Check website for update text with Puppeteer
@@ -65,7 +65,7 @@ jobs:
           cd apps/namadillo/dist
           echo '{ "rewrites": [ { "source": "/(.*)", "destination": "/index.html" } ] }' > rewrites.json
 
-      # 8. Commit and push changes back to main.
+      # 8. Commit and push changes to main.
       - name: Commit and push changes
         if: steps.check.outputs.found == 'true'
         run: |
@@ -80,7 +80,7 @@ jobs:
         if: steps.check.outputs.found == 'true'
         run: |
           npm install -g vercel
-          # The following simulates:
+          # Simulate the four responses:
           # 1) "y" + Enter
           # 2) Enter
           # 3) "y" + Enter
