@@ -28,7 +28,7 @@ jobs:
       - name: Check website for update text with Puppeteer
         id: check
         run: |
-          npm install puppeteer
+          yarn add puppeteer
           node -e "const puppeteer = require('puppeteer'); (async () => {
             const browser = await puppeteer.launch({ args: ['--no-sandbox'] });
             const page = await browser.newPage();
@@ -54,10 +54,10 @@ jobs:
       - name: Build Namadillo app
         if: steps.check.outputs.found == 'true'
         run: |
-          cd apps/namadillo
           yarn
           yarn wasm:build
           yarn wasm:build:dev
+          cd apps/namadillo
           yarn install
           yarn build
 
