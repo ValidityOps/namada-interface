@@ -34,7 +34,7 @@ jobs:
             const page = await browser.newPage();
             await page.goto('https://www.validityops.com', { waitUntil: 'networkidle2' });
             const text = await page.evaluate(() => document.body.innerText);
-            const found = text.includes('Your Namadillo version is not compatible with the current Namada Indexer');
+            const found = text.includes('Namadillo is running an outdated version');
             console.log('Found text:', found);
             const fs = require('fs');
             fs.appendFileSync(process.env.GITHUB_OUTPUT, 'found=' + (found ? 'true' : 'false') + '\n');
