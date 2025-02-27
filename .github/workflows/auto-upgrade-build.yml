@@ -35,7 +35,7 @@ jobs:
             await page.goto('https://www.validityops.com', { waitUntil: 'networkidle2' });
             const text = await page.evaluate(() => document.body.innerText);
             const found = text.includes('Namadillo is running an outdated version');
-            console.log('Found text:', found);
+            console.log('Found text:', found, text);
             const fs = require('fs');
             fs.appendFileSync(process.env.GITHUB_OUTPUT, 'found=' + (found ? 'true' : 'false') + '\n');
             await browser.close();
