@@ -43,7 +43,7 @@ const TransparentTokensTable = ({
   }: TokenBalance): TableRow => {
     const icon = getAssetImageUrl(asset);
     const isNam = isNamadaAsset(asset);
-
+    const namTransferLocked = isNam && !namTransfersEnabled;
     return {
       cells: [
         <div
@@ -85,7 +85,7 @@ const TransparentTokensTable = ({
           {isNam && (
             <ActionButton
               size="xs"
-              className="w-fit mx-auto"
+              className={`w-fit mx-auto ${namTransferLocked ? "-mr-2" : ""}`}
               backgroundColor="cyan"
               href={routes.stakingBondingIncrement}
             >
@@ -93,11 +93,11 @@ const TransparentTokensTable = ({
             </ActionButton>
           )}
           <div className="flex items-center gap-8 ml-8 text-neutral-450">
-            {isNam && !namTransfersEnabled ?
+            {namTransferLocked ?
               <span className="text-xs">NAM Transfer Locked</span>
             : [
                 {
-                  url: `${routes.transfer}?${params.asset}=${originalAddress}`,
+                  url: `${routes.transfer}?${params.asset}=${originalAddress}&${params.shielded}=0`,
                   icon: <IoSwapHorizontal className="h-[20px] w-[20px]" />,
                 },
                 {

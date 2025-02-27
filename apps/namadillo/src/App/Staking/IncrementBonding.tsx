@@ -18,7 +18,8 @@ import { useTransaction } from "hooks/useTransaction";
 import { useValidatorFilter } from "hooks/useValidatorFilter";
 import { useValidatorSorting } from "hooks/useValidatorSorting";
 import { useAtomValue } from "jotai";
-import { useRef, useState } from "react";
+import { getTopValidatorsAddresses } from "lib/staking";
+import { useMemo, useRef, useState } from "react";
 import { GoAlert } from "react-icons/go";
 import { useNavigate } from "react-router-dom";
 import { ValidatorFilterOptions } from "types";
@@ -143,6 +144,10 @@ const IncrementBonding = (): JSX.Element => {
     seed: seed.current,
   });
 
+  const topValidatorsByRank = useMemo(() => {
+    return getTopValidatorsAddresses(validators?.data ?? []);
+  }, [validators]);
+
   const onSubmit = (e: React.FormEvent): void => {
     e.preventDefault();
     performBonding();
@@ -243,6 +248,7 @@ const IncrementBonding = (): JSX.Element => {
                 <IncrementBondingTable
                   resultsPerPage={resultsPerPage}
                   validators={sortedValidators}
+                  topValidatorsByRank={topValidatorsByRank}
                   onChangeValidatorAmount={onChangeValidatorAmount}
                   updatedAmountByAddress={updatedAmountByAddress}
                   stakedAmountByAddress={stakedAmountByAddress}
