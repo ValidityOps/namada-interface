@@ -11,6 +11,7 @@ import {
 } from "react-router-dom";
 import { AccountOverview } from "./AccountOverview";
 import { App } from "./App";
+import { BugReport } from "./Common/BugReport";
 import { NotFound } from "./Common/NotFound";
 import { RouteErrorBoundary } from "./Common/RouteErrorBoundary";
 import { GovernanceOverview } from "./Governance/GovernanceOverview";
@@ -30,6 +31,7 @@ import { NamadaTransfer } from "./NamadaTransfer/NamadaTransfer";
 import { routes } from "./routes";
 import { Advanced } from "./Settings/Advanced";
 import { EnableFeatures } from "./Settings/EnableFeatures";
+import { SettingsLedger } from "./Settings/SettingsLedger";
 import { SettingsMain } from "./Settings/SettingsMain";
 import { SettingsMASP } from "./Settings/SettingsMASP";
 import { SettingsPanel } from "./Settings/SettingsPanel";
@@ -39,6 +41,7 @@ import IncrementBonding from "./Staking/IncrementBonding";
 import { ReDelegate } from "./Staking/ReDelegate";
 import { StakingOverview } from "./Staking/StakingOverview";
 import { StakingRewards } from "./Staking/StakingRewards";
+import { StakingWithdrawModal } from "./Staking/StakingWithdrawModal";
 import { Unstake } from "./Staking/Unstake";
 import { SwitchAccountPanel } from "./SwitchAccount/SwitchAccountPanel";
 import { TransactionDetails } from "./Transactions/TransactionDetails";
@@ -130,6 +133,7 @@ export const MainRoutes = (): JSX.Element => {
           )}
 
           {/* Other */}
+          <Route path={routes.bugReport} element={<BugReport />} />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
@@ -146,6 +150,7 @@ export const MainRoutes = (): JSX.Element => {
               element={<SettingsSignArbitrary />}
             />
             <Route path={routes.settingsMASP} element={<SettingsMASP />} />
+            <Route path={routes.settingsLedger} element={<SettingsLedger />} />
             <Route
               path={routes.settingsFeatures}
               element={<EnableFeatures />}
@@ -158,6 +163,10 @@ export const MainRoutes = (): JSX.Element => {
           <Route
             path={routes.stakingClaimRewards}
             element={<StakingRewards />}
+          />
+          <Route
+            path={routes.stakingWithdrawal}
+            element={<StakingWithdrawModal />}
           />
         </Route>
       </Routes>

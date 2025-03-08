@@ -1,5 +1,44 @@
 # Changelog
 
+## [1.16.0](https://github.com/anoma/namada-interface/compare/namadillo@v1.15.1...namadillo@v1.16.0) (2025-03-07)
+
+
+### Features
+
+* Add footer logo to all pages ([#1811](https://github.com/anoma/namada-interface/issues/1811)) ([e805484](https://github.com/anoma/namada-interface/commit/e8054849299d94640f7399d3fe27aaa8bf29bed6))
+* Add rewards column ([#1793](https://github.com/anoma/namada-interface/issues/1793)) ([75c65cf](https://github.com/anoma/namada-interface/commit/75c65cfdb20abbe48b827f8005bd716ef2027c21))
+* Adding masp asset rewards panel info ([#1797](https://github.com/anoma/namada-interface/issues/1797)) ([3b1a197](https://github.com/anoma/namada-interface/commit/3b1a197aac9153d5f549a9f2c68b92a4b022e3df))
+* Alter yellow warning banner ([#1803](https://github.com/anoma/namada-interface/issues/1803)) ([3d79203](https://github.com/anoma/namada-interface/commit/3d79203fa5942877f6b668d4cc433009e9d6c870))
+* Bumping minimum compatibility for the indexer ([#1836](https://github.com/anoma/namada-interface/issues/1836)) ([cdbfa27](https://github.com/anoma/namada-interface/commit/cdbfa274e2eb846e6467b2c3706cf674f3f4cddc))
+* Creating staking withdraw modal, with a fee selector ([#1835](https://github.com/anoma/namada-interface/issues/1835)) ([1e79fc1](https://github.com/anoma/namada-interface/commit/1e79fc144710925148c58dd592d5c07d30672270))
+* Improving bug report info gathering ([#1825](https://github.com/anoma/namada-interface/issues/1825)) ([c7ca25f](https://github.com/anoma/namada-interface/commit/c7ca25fe1cbeccd366158fc412ef513be59b5a70))
+* Use indexer services timestamps in status check ([#1830](https://github.com/anoma/namada-interface/issues/1830)) ([9ad448c](https://github.com/anoma/namada-interface/commit/9ad448c158c7baf2cc591ba3f9a835c5dcebdf1e))
+
+
+### Bug Fixes
+
+* Add destination chain id ([#1799](https://github.com/anoma/namada-interface/issues/1799)) ([971bf1c](https://github.com/anoma/namada-interface/commit/971bf1c0560159358fe4ca2c9773669abcac2372))
+
+## [1.15.1](https://github.com/anoma/namada-interface/compare/namadillo@v1.15.0...namadillo@v1.15.1) (2025-03-03)
+
+
+### Bug Fixes
+
+* Add USB device type dependencies to Namadillo, fix return type ([#1805](https://github.com/anoma/namada-interface/issues/1805)) ([8941597](https://github.com/anoma/namada-interface/commit/8941597a1b4eaf1f4f4e7f414d82ab2e3fcf13c7))
+
+## [1.15.0](https://github.com/anoma/namada-interface/compare/namadillo@v1.14.0...namadillo@v1.15.0) (2025-03-03)
+
+
+### Features
+
+* Add active below threshold trait ([#1773](https://github.com/anoma/namada-interface/issues/1773)) ([75f5c3e](https://github.com/anoma/namada-interface/commit/75f5c3e5b5ab4adf01c535e8613cb6e86a8bd0ef))
+* Revert change to SwitchAccountPanel filter ([#1788](https://github.com/anoma/namada-interface/issues/1788)) ([27bc07d](https://github.com/anoma/namada-interface/commit/27bc07d5c725911a0de56b40df421cf24446bc83))
+
+
+### Bug Fixes
+
+* Bumping extension required version to 0.5.x ([#1794](https://github.com/anoma/namada-interface/issues/1794)) ([193365f](https://github.com/anoma/namada-interface/commit/193365ff145f54d37c4859da90152424cea1bf9d))
+
 ## [1.14.0](https://github.com/anoma/namada-interface/compare/namadillo@v1.13.0...namadillo@v1.14.0) (2025-02-27)
 
 

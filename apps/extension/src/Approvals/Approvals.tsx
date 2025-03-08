@@ -19,12 +19,6 @@ import { ConfirmSignLedgerTx } from "./ConfirmSignLedgerTx";
 import { ConfirmSignTx } from "./ConfirmSignTx";
 import { WithAuth } from "./WithAuth";
 
-export enum Status {
-  Completed,
-  Pending,
-  Failed,
-}
-
 export type ExtensionLockContextType = {
   isUnlocked?: boolean;
   setIsUnlocked?: Dispatch<SetStateAction<boolean>>;
@@ -37,6 +31,7 @@ export type ApprovalDetails = {
   accountType: AccountType;
   msgId: string;
   txDetails: TxDetails[];
+  txType?: string;
 };
 
 export type SignArbitraryDetails = {
