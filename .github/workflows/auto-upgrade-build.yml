@@ -58,7 +58,6 @@ jobs:
           yarn
           yarn wasm:build
           yarn wasm:build:dev
-          yarn install
           yarn build
 
       # 7. Add the rewrites file in the build output (dist).
