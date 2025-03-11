@@ -18,6 +18,7 @@ import { rpcUrlAtom } from "atoms/settings";
 import BigNumber from "bignumber.js";
 import { useTransactionActions } from "hooks/useTransactionActions";
 import { useTransfer } from "hooks/useTransfer";
+import { useUrlState } from "hooks/useUrlState";
 import { wallets } from "integrations";
 import invariant from "invariant";
 import { useAtom, useAtomValue } from "jotai";
@@ -26,7 +27,6 @@ import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import namadaChain from "registry/namada.json";
 import { twMerge } from "tailwind-merge";
-import { Address } from "types";
 import { NamadaTransferTopHeader } from "./NamadaTransferTopHeader";
 
 export const NamadaTransfer: React.FC = () => {
@@ -36,7 +36,6 @@ export const NamadaTransfer: React.FC = () => {
   const [generalErrorMessage, setGeneralErrorMessage] = useState("");
   const [currentStatus, setCurrentStatus] = useState("");
   const [currentStatusExplanation, setCurrentStatusExplanation] = useState("");
-  const [completedAt, setCompletedAt] = useState<Date | undefined>();
 
   const shieldedParam = searchParams.get(params.shielded);
   const shielded = shieldedParam ? shieldedParam === "1" : true;
@@ -64,7 +63,9 @@ export const NamadaTransfer: React.FC = () => {
     : account.type !== AccountType.ShieldedKeys
   );
   const sourceAddress = account?.address;
-  const selectedAssetAddress = searchParams.get(params.asset) || undefined;
+  const [selectedAssetAddress, setSelectedAssetAddress] = useUrlState(
+    params.asset
+  );
   const selectedAsset =
     selectedAssetAddress ? availableAssets?.[selectedAssetAddress] : undefined;
   const source = sourceAddress ?? "";
@@ -76,6 +77,8 @@ export const NamadaTransfer: React.FC = () => {
     isSuccess: isTransferSuccessful,
     txKind,
     feeProps,
+    completedAt,
+    redirectToTransactionPage,
   } = useTransfer({
     source,
     target,
@@ -98,9 +101,6 @@ export const NamadaTransfer: React.FC = () => {
       setCurrentStatus("");
       setCurrentStatusExplanation("");
     },
-    onBroadcasted: () => {
-      setCompletedAt(new Date());
-    },
     asset: selectedAsset?.asset,
   });
 
@@ -112,21 +112,6 @@ export const NamadaTransfer: React.FC = () => {
       (currentParams) => {
         const newParams = new URLSearchParams(currentParams);
         newParams.set(params.shielded, isShielded ? "1" : "0");
-        return newParams;
-      },
-      { replace: true }
-    );
-  };
-
-  const onChangeSelectedAsset = (address?: Address): void => {
-    setSearchParams(
-      (currentParams) => {
-        const newParams = new URLSearchParams(currentParams);
-        if (address) {
-          newParams.set(params.asset, address);
-        } else {
-          newParams.delete(params.asset);
-        }
         return newParams;
       },
       { replace: true }
@@ -198,8 +183,8 @@ export const NamadaTransfer: React.FC = () => {
           wallet: wallets.namada,
           walletAddress: sourceAddress,
           selectedAssetAddress,
-          onChangeSelectedAsset,
-          isShielded: shielded,
+          onChangeSelectedAsset: setSelectedAssetAddress,
+          isShieldedAddress: shielded,
           onChangeShielded,
           amount: displayAmount,
           onChangeAmount: setDisplayAmount,
@@ -212,17 +197,19 @@ export const NamadaTransfer: React.FC = () => {
           onChangeCustomAddress: setCustomAddress,
           wallet: wallets.namada,
           walletAddress: customAddress,
-          isShielded: isShieldedAddress(customAddress),
+          isShieldedAddress: isShieldedAddress(customAddress),
         }}
         feeProps={feeProps}
         currentStatus={currentStatus}
-        completedAt={completedAt}
         currentStatusExplanation={currentStatusExplanation}
+        isShieldedTx={isSourceShielded}
         isSubmitting={
           isPerformingTransfer || isTransferSuccessful || Boolean(completedAt)
         }
         errorMessage={generalErrorMessage}
         onSubmitTransfer={onSubmitTransfer}
+        completedAt={completedAt}
+        onComplete={redirectToTransactionPage}
       />
     </Panel>
   );

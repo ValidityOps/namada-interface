@@ -1,7 +1,7 @@
 import { Asset, Chain } from "@chain-registry/types";
 import { IbcTransferMsgValue } from "@namada/types";
 import { mapUndefined } from "@namada/utils";
-import { routes } from "App/routes";
+import { params, routes } from "App/routes";
 import {
   OnSubmitTransferParams,
   TransferModule,
@@ -18,6 +18,7 @@ import {
 import BigNumber from "bignumber.js";
 import { useTransaction } from "hooks/useTransaction";
 import { useTransactionActions } from "hooks/useTransactionActions";
+import { useUrlState } from "hooks/useUrlState";
 import { useWalletManager } from "hooks/useWalletManager";
 import { wallets } from "integrations";
 import { KeplrWalletManager } from "integrations/Keplr";
@@ -27,7 +28,7 @@ import { TransactionPair } from "lib/query";
 import { useEffect, useState } from "react";
 import { generatePath, useNavigate } from "react-router-dom";
 import namadaChainRegistry from "registry/namada.json";
-import { Address, IbcTransferTransactionData, TransferStep } from "types";
+import { IbcTransferTransactionData, TransferStep } from "types";
 import {
   toBaseAmount,
   toDisplayAmount,
@@ -43,7 +44,9 @@ export const IbcWithdraw: React.FC = () => {
   const namadaChain = useAtomValue(chainAtom);
 
   const [generalErrorMessage, setGeneralErrorMessage] = useState("");
-  const [selectedAssetAddress, setSelectedAssetAddress] = useState<Address>();
+  const [selectedAssetAddress, setSelectedAssetAddress] = useUrlState(
+    params.asset
+  );
   const [amount, setAmount] = useState<BigNumber | undefined>();
   const [customAddress, setCustomAddress] = useState<string>("");
   const [sourceChannel, setSourceChannel] = useState("");
@@ -64,16 +67,15 @@ export const IbcWithdraw: React.FC = () => {
     selectedAssetAddress
   );
 
-  const selectedAsset = mapUndefined(
-    (address) => availableAssets?.[address],
-    selectedAssetAddress
-  );
+  const selectedAsset =
+    selectedAssetAddress ? availableAssets?.[selectedAssetAddress] : undefined;
 
   const {
     walletAddress: keplrAddress,
     connectToChainId,
     chainId,
     registry,
+    loadWalletAddress,
   } = useWalletManager(keplr);
 
   const onChangeWallet = (): void => {
@@ -96,6 +98,16 @@ export const IbcWithdraw: React.FC = () => {
     }
   };
 
+  const updateDestinationChainAndAddress = (chain: Chain | undefined): void => {
+    setDestinationChain(chain);
+    if (customAddress) {
+      setCustomAddress("");
+    }
+    if (chain) {
+      loadWalletAddress(chain?.chain_id);
+    }
+  };
+
   const {
     data: ibcChannels,
     isError: unknownIbcChannels,
@@ -108,10 +120,10 @@ export const IbcWithdraw: React.FC = () => {
 
   // Search for original chain. We don't want to enable users to transfer Namada assets
   // to other chains different than the original one. Ex: OSMO should only be withdrew to Osmosis,
-  // ATOM to Cosmoshub.
+  // ATOM to Cosmoshub, etc.
   useEffect(() => {
     if (!selectedAsset || !chainTokens.data) {
-      setDestinationChain(undefined);
+      updateDestinationChainAndAddress(undefined);
       return;
     }
 
@@ -122,11 +134,11 @@ export const IbcWithdraw: React.FC = () => {
     if (token && "trace" in token) {
       const denom = getDenomFromIbcTrace(token.trace);
       const chain = searchChainByDenom(denom);
-      setDestinationChain(chain);
+      updateDestinationChainAndAddress(chain);
       return;
     }
 
-    setDestinationChain(undefined);
+    updateDestinationChainAndAddress(undefined);
   }, [selectedAsset, chainTokens.data]);
 
   const {
@@ -266,7 +278,7 @@ export const IbcWithdraw: React.FC = () => {
           wallet: wallets.namada,
           walletAddress: namadaAccount.data?.address,
           chain: namadaChainRegistry as Chain,
-          isShielded: false,
+          isShieldedAddress: false,
           availableAssets,
           availableAmount,
           selectedAssetAddress,
@@ -283,7 +295,7 @@ export const IbcWithdraw: React.FC = () => {
           onChangeCustomAddress: setCustomAddress,
           chain: destinationChain,
           onChangeWallet,
-          isShielded: false,
+          isShieldedAddress: false,
         }}
         errorMessage={generalErrorMessage || error?.message || ""}
         currentStatus={currentStatus}
