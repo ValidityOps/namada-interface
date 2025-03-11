@@ -54,10 +54,10 @@ jobs:
       - name: Build Namadillo app
         if: steps.check.outputs.found == 'true'
         run: |
+          cd apps/namadillo
           yarn
           yarn wasm:build
           yarn wasm:build:dev
-          cd apps/namadillo
           yarn install
           yarn build
 
