@@ -276,8 +276,11 @@ const fromIndexerStatus = (
       return "ongoing";
     case IndexerProposalStatusEnum.Passed:
       return "passed";
+    case IndexerProposalStatusEnum.ExecutedRejected:
     case IndexerProposalStatusEnum.Rejected:
       return "rejected";
+    case IndexerProposalStatusEnum.ExecutedPassed:
+      return "executed";
     default:
       return assertNever(indexerProposalStatus);
   }
@@ -295,6 +298,8 @@ const toIndexerStatus = (
       return ApiIndexerProposalStatusEnum.Passed;
     case "rejected":
       return ApiIndexerProposalStatusEnum.Rejected;
+    case "executed":
+      return ApiIndexerProposalStatusEnum.ExecutedPassed;
     default:
       return assertNever(proposalStatus);
   }
