@@ -304,10 +304,7 @@ impl TxDetails {
                 let token = wrapper.fee.token.to_string();
                 let wrapper_fee_payer = wrapper.fee_payer();
 
-                let expiration: Option<u64> = match expiration {
-                    Some(exp) => Some(exp.to_unix_timestamp() as u64),
-                    None => None,
-                };
+                let expiration: Option<u64> = expiration.map(|exp| exp.to_unix_timestamp() as u64);
 
                 let wrapper_tx = WrapperTxMsg::new(
                     token,
@@ -455,7 +452,7 @@ impl BatchTxResult {
 #[derive(BorshSerialize, BorshDeserialize)]
 #[borsh(crate = "namada_sdk::borsh")]
 pub struct TxResponse {
-    code: String,
+    code: u8,
     commitments: Vec<BatchTxResult>,
     gas_used: String,
     hash: String,
@@ -466,7 +463,7 @@ pub struct TxResponse {
 
 impl TxResponse {
     pub fn new(
-        code: String,
+        code: u8,
         commitments: Vec<BatchTxResult>,
         gas_used: String,
         hash: String,

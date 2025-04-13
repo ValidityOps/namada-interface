@@ -201,9 +201,7 @@ export const broadcastTransaction = async <T>(
 ): Promise<PromiseSettledResult<TxResponseMsgValue>[]> => {
   const { rpc } = await getSdkInstance();
   const response = await Promise.allSettled(
-    encodedTx.txs.map((_, i) =>
-      rpc.broadcastTx(signedTxs[i], encodedTx.wrapperTxProps)
-    )
+    encodedTx.txs.map((_, i) => rpc.broadcastTx(signedTxs[i]))
   );
 
   return response;
@@ -236,8 +234,7 @@ export const broadcastTxWithEvents = async <T>(
       if (result.status === "fulfilled") {
         return result.value.commitments;
       } else {
-        // Throw wrapper error if encountered
-        throw new Error(`Broadcast Tx failed! ${result.reason}`);
+        throw new Error(result.reason.toString());
       }
     });
 
