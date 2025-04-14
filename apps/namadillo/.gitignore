@@ -10,3 +10,4 @@
 /playwright/.cache/
 /public/localnet-config.toml
 .vercel
+.env*.local

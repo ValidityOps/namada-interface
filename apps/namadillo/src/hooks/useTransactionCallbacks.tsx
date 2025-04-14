@@ -1,10 +1,12 @@
 import { accountBalanceAtom, defaultAccountAtom } from "atoms/accounts";
 import { shieldedBalanceAtom } from "atoms/balance/atoms";
+import { chainStatusAtom } from "atoms/chain";
 import { shouldUpdateBalanceAtom, shouldUpdateProposalAtom } from "atoms/etc";
 import { claimableRewardsAtom } from "atoms/staking";
 import { useAtomValue, useSetAtom } from "jotai";
 import { TransferStep, TransferTransactionData } from "types";
 import { useTransactionEventListener } from "utils";
+import { saveReferralToSupabase } from "utils/supabase";
 import { useTransactionActions } from "./useTransactionActions";
 
 export const useTransactionCallback = (): void => {
@@ -16,7 +18,7 @@ export const useTransactionCallback = (): void => {
   const { changeTransaction } = useTransactionActions();
   const shouldUpdateProposal = useSetAtom(shouldUpdateProposalAtom);
   const shouldUpdateBalance = useSetAtom(shouldUpdateBalanceAtom);
-
+  const chainStatus = useAtomValue(chainStatusAtom);
   const onBalanceUpdate = (): void => {
     // TODO: refactor this after event subscription is enabled on indexer
     shouldUpdateBalance(true);
@@ -31,7 +33,15 @@ export const useTransactionCallback = (): void => {
     }
   };
 
-  useTransactionEventListener("Bond.Success", onBalanceUpdate);
+  const successfulBond = async (): Promise<void> => {
+    onBalanceUpdate();
+    const referrerAddress = localStorage.getItem("referrerAddress");
+    const refereeAddress = localStorage.getItem("refereeAddress");
+    const epoch = chainStatus?.epoch;
+    await saveReferralToSupabase(referrerAddress!, refereeAddress!, epoch!);
+  };
+
+  useTransactionEventListener("Bond.Success", successfulBond);
   useTransactionEventListener("Unbond.Success", onBalanceUpdate);
   useTransactionEventListener("Withdraw.Success", onBalanceUpdate);
   useTransactionEventListener("Redelegate.Success", onBalanceUpdate);
