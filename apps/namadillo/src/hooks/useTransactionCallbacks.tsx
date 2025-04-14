@@ -39,13 +39,6 @@ export const useTransactionCallback = (): void => {
     const refereeAddress = localStorage.getItem("refereeAddress");
     const epoch = chainStatus?.epoch;
     await saveReferralToSupabase(referrerAddress!, refereeAddress!, epoch!);
-
-    // After this write an authenticated page that allows Paul to grab all referrals from DB
-    // Then loop through them and check if the referee has received rewards in the epochs searched for.
-    // Once that's done display all the referrers, referees, amounts in a table.
-    // Remove all delegates that have been paid 0 on their last epoch from the DB.
-    // When he presses submit then do a batch transaction of all the rewards to be paid out.
-    // Make sure to add my 25% of the rewards in the transaction too.
   };
 
   useTransactionEventListener("Bond.Success", successfulBond);
