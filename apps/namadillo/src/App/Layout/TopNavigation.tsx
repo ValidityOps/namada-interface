@@ -30,9 +30,9 @@ export const TopNavigation = (): JSX.Element => {
   const defaultAccount = useAtomValue(defaultAccountAtom);
   const location = useLocation();
   const navigate = useNavigate();
-  const isValidityOps = true;
-  // defaultAccount.data?.address ===
-  // "tnam1q8lhvxys53dlc8wzlg7dyqf9avd0vff6wvav4amt";
+  const isValidityOps =
+    defaultAccount.data?.address ===
+    "tnam1q8lhvxys53dlc8wzlg7dyqf9avd0vff6wvav4amt";
 
   if (!userHasAccount) {
     return (

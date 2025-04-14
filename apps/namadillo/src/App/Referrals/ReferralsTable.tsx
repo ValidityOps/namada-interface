@@ -149,7 +149,6 @@ export const ReferralsTable = ({
   const pageCount = Math.ceil(referrals.length / resultsPerPage);
 
   const generateReferralSheet = async (): Promise<void> => {
-    console.log(chainStatus, "chainStatus");
     if (!chainStatus?.epoch) {
       setGenerationError("Chain status not available");
       return;
@@ -174,7 +173,6 @@ export const ReferralsTable = ({
           epoch++
         ) {
           try {
-            console.log("yooo");
             const url = `${process.env.INDEXER_URL}/api/v1/pos/reward/${referrerAddress}/tnam1q8lhvxys53dlc8wzlg7dyqf9avd0vff6wvav4amt/${epoch}`;
 
             const response = await fetch(url);
