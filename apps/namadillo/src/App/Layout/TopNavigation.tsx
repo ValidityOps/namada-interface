@@ -30,6 +30,9 @@ export const TopNavigation = (): JSX.Element => {
   const defaultAccount = useAtomValue(defaultAccountAtom);
   const location = useLocation();
   const navigate = useNavigate();
+  const isValidityOps = true;
+  // defaultAccount.data?.address ===
+  // "tnam1q8lhvxys53dlc8wzlg7dyqf9avd0vff6wvav4amt";
 
   if (!userHasAccount) {
     return (
@@ -53,7 +56,7 @@ export const TopNavigation = (): JSX.Element => {
 
   return (
     <div className="flex-1 flex items-center gap-4 sm:gap-6">
-      <div className="hidden lg:grid lg:grid-cols-3 gap-2">
+      <div className="hidden lg:grid lg:grid-cols-4 gap-2">
         {maspEnabled && (
           <ActionButton
             className="py-2"
@@ -85,6 +88,11 @@ export const TopNavigation = (): JSX.Element => {
             backgroundColor="white"
           >
             Transfer
+          </ActionButton>
+        )}
+        {isValidityOps && (
+          <ActionButton href={routes.referrals} className="py-2" size="xs">
+            Referrals
           </ActionButton>
         )}
       </div>
