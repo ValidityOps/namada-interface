@@ -31,8 +31,11 @@ export const TopNavigation = (): JSX.Element => {
   const location = useLocation();
   const navigate = useNavigate();
   const isValidityOps =
-    defaultAccount.data?.address ===
-    "tnam1q8lhvxys53dlc8wzlg7dyqf9avd0vff6wvav4amt";
+    defaultAccount.data?.address &&
+    [
+      "tnam1q8lhvxys53dlc8wzlg7dyqf9avd0vff6wvav4amt",
+      "tnam1qr0e06vqhw9u0yqy9d5zmtq0q8ekckhe2vkqc3ky",
+    ].includes(defaultAccount.data?.address);
 
   if (!userHasAccount) {
     return (

@@ -1,5 +1,9 @@
 import { Panel } from "@namada/components";
+import { routes } from "App/routes";
+import { defaultAccountAtom } from "atoms/accounts";
+import { useAtomValue } from "jotai";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { getReferralsFromSupabase } from "../../utils/supabase";
 import { ReferralsTable } from "./ReferralsTable";
 
@@ -15,7 +19,15 @@ export const Referrals = (): JSX.Element => {
   const [referrals, setReferrals] = useState<Referral[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const defaultAccount = useAtomValue(defaultAccountAtom);
+  const isValidityOps =
+    defaultAccount.data?.address &&
+    [
+      "tnam1q8lhvxys53dlc8wzlg7dyqf9avd0vff6wvav4amt",
+      "tnam1qr0e06vqhw9u0yqy9d5zmtq0q8ekckhe2vkqc3ky",
+    ].includes(defaultAccount.data?.address);
 
+  const navigate = useNavigate();
   useEffect(() => {
     const fetchReferrals = async (): Promise<void> => {
       try {
@@ -35,9 +47,13 @@ export const Referrals = (): JSX.Element => {
         setLoading(false);
       }
     };
-
+    if (!isValidityOps) return navigate(routes.root);
     fetchReferrals();
   }, []);
+
+  if (!isValidityOps) {
+    return <div>You are not authorized to view this page</div>;
+  }
 
   return (
     <Panel className="min-h-600">
