@@ -203,6 +203,45 @@ export const ReferralSheetModal = ({
           {rewardsData.length === 0 ?
             <div className="text-center py-4">No rewards found</div>
           : <div className="flex flex-col gap-6">
+              {/* Payout Referrals button - separate from tables */}
+              <div className="bg-neutral-700 p-6 rounded-md flex flex-col items-center gap-4 my-4 mt-2">
+                <h3 className="text-lg font-semibold text-yellow">
+                  Process Payouts
+                </h3>
+                <p className="text-sm text-center max-w-xl">
+                  This will create a batch payment transaction to pay out all
+                  referrers their total rewards. The transaction will be sent to
+                  your Namada extension for approval.
+                </p>
+                {payoutError && (
+                  <div className="text-red-500 text-sm text-center font-medium">
+                    {payoutError}
+                  </div>
+                )}
+                {payoutSuccess && (
+                  <div className="text-green-500 text-sm text-center font-medium">
+                    Payout transaction successfully sent to the blockchain!
+                  </div>
+                )}
+
+                <ActionButton
+                  className="w-fit px-6 py-3 mt-2"
+                  backgroundColor="yellow"
+                  textColor="black"
+                  onClick={handlePayoutReferrals}
+                  disabled={
+                    isProcessingPayout ||
+                    isExecutingBatchTransfer ||
+                    rewardsData.length === 0 ||
+                    !chain.isSuccess ||
+                    !defaultAccount.data
+                  }
+                >
+                  {isProcessingPayout || isExecutingBatchTransfer ?
+                    "Processing..."
+                  : "Payout Referrals"}
+                </ActionButton>
+              </div>
               <div className="bg-neutral-700 p-4 rounded-md">
                 <h3 className="text-lg font-semibold mb-2">
                   Total Rewards by Referrer
@@ -236,10 +275,8 @@ export const ReferralSheetModal = ({
                   ))}
                 </div>
               </div>
-
               <div>
                 <h3 className="text-lg font-semibold mb-2">Rewards by Epoch</h3>
-
                 {/* Referrer selector tabs */}
                 <div className="mb-4 border-b border-neutral-600">
                   <div className="flex overflow-x-auto">
@@ -278,44 +315,6 @@ export const ReferralSheetModal = ({
                   }}
                   headProps={{ className: "text-neutral-500" }}
                 />
-              </div>
-
-              {/* Payout Referrals button */}
-              <div className="bg-neutral-700 p-4 rounded-md flex flex-col items-center gap-3">
-                <h3 className="text-lg font-semibold">Process Payouts</h3>
-                <p className="text-sm text-center max-w-xl">
-                  This will create a batch payment transaction to pay out all
-                  referrers their total rewards. The transaction will be sent to
-                  your Namada extension for approval.
-                </p>
-
-                {payoutError && (
-                  <div className="text-red-500 text-sm text-center">
-                    {payoutError}
-                  </div>
-                )}
-
-                {payoutSuccess && (
-                  <div className="text-green-500 text-sm text-center">
-                    Payout transaction successfully sent to the blockchain!
-                  </div>
-                )}
-
-                <ActionButton
-                  className="w-fit"
-                  onClick={handlePayoutReferrals}
-                  disabled={
-                    isProcessingPayout ||
-                    isExecutingBatchTransfer ||
-                    rewardsData.length === 0 ||
-                    !chain.isSuccess ||
-                    !defaultAccount.data
-                  }
-                >
-                  {isProcessingPayout || isExecutingBatchTransfer ?
-                    "Processing..."
-                  : "Payout Referrals"}
-                </ActionButton>
               </div>
             </div>
           }

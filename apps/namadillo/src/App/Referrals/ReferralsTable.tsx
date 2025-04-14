@@ -169,7 +169,7 @@ export const ReferralsTable = ({
         // Get rewards for each epoch from start_epoch to current epoch
         for (
           let epoch = referral.start_epoch;
-          epoch < chainStatus.epoch;
+          epoch < chainStatus.epoch + 1;
           epoch++
         ) {
           try {
