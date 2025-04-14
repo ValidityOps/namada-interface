@@ -83,6 +83,7 @@ export const createWithdrawTx = async (
   gasConfig: GasConfig
 ): Promise<EncodedTxData<WithdrawProps>> => {
   const sdk = await getSdkInstance();
+
   return await buildTx(
     sdk,
     account,
@@ -92,7 +93,6 @@ export const createWithdrawTx = async (
     sdk.tx.buildWithdraw
   );
 };
-
 export const createClaimTx = async (
   chain: ChainSettings,
   account: Account,

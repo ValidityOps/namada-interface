@@ -1,12 +1,15 @@
-import { Modal } from "@namada/components";
-
-import { Tooltip } from "@namada/components";
-
-import { TableRow } from "@namada/components";
+import { ActionButton, Modal, TableRow, Tooltip } from "@namada/components";
+import { TransparentTransferMsgValue } from "@namada/types";
 import { shortenAddress } from "@namada/utils";
 import { ModalTransition } from "App/Common/ModalTransition";
 import { TableWithPaginator } from "App/Common/TableWithPaginator";
+import { defaultAccountAtom } from "atoms/accounts";
+import { chainAtom, nativeTokenAddressAtom } from "atoms/chain";
+import { createTransparentTransferAtom } from "atoms/transfer/atoms";
 import BigNumber from "bignumber.js";
+import { useTransaction } from "hooks/useTransaction";
+import { useTransactionFee } from "hooks/useTransactionFee";
+import { useAtomValue } from "jotai";
 import { useCallback, useState } from "react";
 import { IoClose } from "react-icons/io5";
 import { twMerge } from "tailwind-merge";
@@ -20,7 +23,14 @@ export const ReferralSheetModal = ({
   onClose: () => void;
 }): JSX.Element => {
   const [page, setPage] = useState(0);
+  const [isProcessingPayout, setIsProcessingPayout] = useState(false);
+  const [payoutError, setPayoutError] = useState<string | null>(null);
+  const [payoutSuccess, setPayoutSuccess] = useState(false);
   const resultsPerPage = 10;
+  const defaultAccount = useAtomValue(defaultAccountAtom);
+  const chain = useAtomValue(chainAtom);
+  const feeProps = useTransactionFee(["TransparentTransfer"], false);
+  const namTokenAddressQuery = useAtomValue(nativeTokenAddressAtom);
 
   // Define table headers
   const headers = [
@@ -98,6 +108,80 @@ export const ReferralSheetModal = ({
     },
     {} as Record<string, ReferralReward[]>
   );
+
+  // Setup transaction
+  const { execute: executeBatchTransfer, isPending: isExecutingBatchTransfer } =
+    useTransaction<TransparentTransferMsgValue>({
+      eventType: "TransparentTransfer",
+      createTxAtom: createTransparentTransferAtom,
+      params: [],
+      parsePendingTxNotification: () => ({
+        title: "Referral payout in progress",
+        description: "Your referral payout transaction is being processed",
+      }),
+      parseErrorTxNotification: () => ({
+        title: "Referral payout failed",
+        description: "An error occurred during the batch payment",
+      }),
+      onBroadcasted: () => {
+        setPayoutSuccess(true);
+        setIsProcessingPayout(false);
+      },
+      onError: (error) => {
+        setPayoutError(
+          typeof error === "string" ? error
+          : error instanceof Error ? error.message
+          : "Unknown error"
+        );
+        setIsProcessingPayout(false);
+      },
+    });
+
+  // Handle payout button click
+  const handlePayoutReferrals = async (): Promise<void> => {
+    try {
+      setIsProcessingPayout(true);
+      setPayoutError(null);
+      setPayoutSuccess(false);
+
+      if (!defaultAccount.data?.address) {
+        throw new Error("No source account available");
+      }
+
+      const sourceAddress = defaultAccount.data.address;
+      // NAM token address - this should be configured appropriately for your environment
+      const tokenAddress = namTokenAddressQuery.data!;
+
+      // Create batch transfer data structure - one per referrer
+      const msgValueData = Object.entries(totalRewards).map(
+        ([referrerAddress, amount]) => ({
+          source: sourceAddress,
+          target: referrerAddress,
+          token: tokenAddress,
+          amount,
+        })
+      );
+
+      const batchProps = [
+        {
+          data: msgValueData,
+        },
+      ];
+
+      // Execute the batch transfer
+      await executeBatchTransfer({
+        params: batchProps,
+        gasConfig: feeProps.gasConfig,
+        account: defaultAccount.data,
+      });
+    } catch (error) {
+      console.error("Payout error:", error);
+      setPayoutError(
+        error instanceof Error ? error.message : "Unknown error occurred"
+      );
+      setIsProcessingPayout(false);
+    }
+  };
 
   return (
     <Modal onClose={onClose}>
@@ -194,6 +278,44 @@ export const ReferralSheetModal = ({
                   }}
                   headProps={{ className: "text-neutral-500" }}
                 />
+              </div>
+
+              {/* Payout Referrals button */}
+              <div className="bg-neutral-700 p-4 rounded-md flex flex-col items-center gap-3">
+                <h3 className="text-lg font-semibold">Process Payouts</h3>
+                <p className="text-sm text-center max-w-xl">
+                  This will create a batch payment transaction to pay out all
+                  referrers their total rewards. The transaction will be sent to
+                  your Namada extension for approval.
+                </p>
+
+                {payoutError && (
+                  <div className="text-red-500 text-sm text-center">
+                    {payoutError}
+                  </div>
+                )}
+
+                {payoutSuccess && (
+                  <div className="text-green-500 text-sm text-center">
+                    Payout transaction successfully sent to the blockchain!
+                  </div>
+                )}
+
+                <ActionButton
+                  className="w-fit"
+                  onClick={handlePayoutReferrals}
+                  disabled={
+                    isProcessingPayout ||
+                    isExecutingBatchTransfer ||
+                    rewardsData.length === 0 ||
+                    !chain.isSuccess ||
+                    !defaultAccount.data
+                  }
+                >
+                  {isProcessingPayout || isExecutingBatchTransfer ?
+                    "Processing..."
+                  : "Payout Referrals"}
+                </ActionButton>
               </div>
             </div>
           }
