@@ -67,7 +67,10 @@ export const getReferralsFromSupabase = async (): Promise<{
   data?: unknown;
 }> => {
   try {
-    const { data, error } = await supabase.from("referrals").select("*");
+    const { data, error } = await supabase
+      .from("referrals")
+      .select("*")
+      .eq("active", true);
 
     if (error) {
       console.error("Error fetching referrals:", error);
