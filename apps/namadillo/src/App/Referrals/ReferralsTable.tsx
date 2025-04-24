@@ -46,35 +46,27 @@ export type ReferralReward = {
   validator: ValidatorInfo;
 };
 
-// Helper function to generate CSV data
 const generateCsvContent = (rewardsData: ReferralReward[]): string => {
-  // CSV Headers
   const headers =
     "Referrer Address,Referee Address,Epoch,Reward (NAM),Validator Name\n";
-
-  // Format each reward as a CSV row
   const csvData = rewardsData
-    .map((reward) => {
-      return [
-        reward.referrerAddress,
-        reward.refereeAddress,
-        reward.epoch,
-        reward.amount.toFixed(6),
-        reward.validator.name,
-      ].join(",");
-    })
+    .map((r) =>
+      [
+        r.referrerAddress,
+        r.refereeAddress,
+        r.epoch,
+        r.amount.toFixed(6),
+        r.validator.name,
+      ].join(",")
+    )
     .join("\n");
-
   return headers + csvData;
 };
 
-// Helper function to download CSV
 const downloadCsv = (data: string, filename: string): void => {
-  const csvContent = `data:text/csv;charset=utf-8,${data}`;
-  const encodedUri = encodeURI(csvContent);
-
+  const uri = encodeURI(`data:text/csv;charset=utf-8,${data}`);
   const link = document.createElement("a");
-  link.setAttribute("href", encodedUri);
+  link.setAttribute("href", uri);
   link.setAttribute("download", filename);
   document.body.appendChild(link);
   link.click();
@@ -95,7 +87,6 @@ export const ReferralsTable = ({
   const [showModal, setShowModal] = useState(false);
   const chainStatus = useAtomValue(chainStatusAtom);
 
-  // Define table headers
   const headers = [
     "Referrer Address",
     "Referee Address",
@@ -103,49 +94,39 @@ export const ReferralsTable = ({
     "Created At",
   ];
 
-  const renderRow = useCallback((referral: Referral): TableRow => {
-    return {
-      key: `referral-${referral.id}`,
+  const renderRow = useCallback(
+    (ref: Referral): TableRow => ({
+      key: `referral-${ref.id}`,
       cells: [
-        // Referrer address (truncated for display)
         <div
           key="referrer"
           className="text-left font-medium max-w-[200px] group/tooltip relative"
         >
-          {shortenAddress(referral.referrer_address, 10, 6)}
-          <Tooltip className="z-20" position="right">
-            {referral.referrer_address}
-          </Tooltip>
+          {shortenAddress(ref.referrer_address, 10, 6)}
+          <Tooltip position="right">{ref.referrer_address}</Tooltip>
         </div>,
-        // Referee address (truncated for display)
         <div
           key="referee"
           className="text-left font-medium max-w-[200px] group/tooltip relative"
         >
-          {shortenAddress(referral.referee_address, 10, 6)}
-          <Tooltip className="z-20" position="right">
-            {referral.referee_address}
-          </Tooltip>
+          {shortenAddress(ref.referee_address, 10, 6)}
+          <Tooltip position="right">{ref.referee_address}</Tooltip>
         </div>,
-        // Epoch
         <div key="start-epoch" className="text-left font-medium">
-          {referral.start_epoch}
+          {ref.start_epoch}
         </div>,
-        // Created at date
         <div key="created-at" className="text-left font-medium">
-          {referral.created_at ?
-            new Date(referral.created_at).toLocaleString()
-          : "N/A"}
+          {ref.created_at ? new Date(ref.created_at).toLocaleString() : "N/A"}
         </div>,
       ],
-    };
-  }, []);
+    }),
+    []
+  );
 
   const paginatedItems = referrals.slice(
     page * resultsPerPage,
     page * resultsPerPage + resultsPerPage
   );
-
   const pageCount = Math.ceil(referrals.length / resultsPerPage);
 
   const generateReferralSheet = async (): Promise<void> => {
@@ -153,72 +134,126 @@ export const ReferralsTable = ({
       setGenerationError("Chain status not available");
       return;
     }
-
     setIsGenerating(true);
     setGenerationError(null);
     setRewardsData([]);
 
     try {
+      type ReferralEpochMapItem = {
+        type: "current" | "previous";
+        referrerAddress: string;
+        refereeAddress: string;
+        epoch: number;
+      };
+      type ResponseData = ReferralEpochMapItem & {
+        data: RewardData[] | null;
+        success: boolean;
+      };
+
+      // map: referralKey → { epoch: { amount, validator } }
+      const cumByReferral = new Map<
+        string,
+        Record<number, { amount: BigNumber; validator: ValidatorInfo }>
+      >();
+      const fetchPromises: Promise<Response>[] = [];
+      const referralEpochMap: ReferralEpochMapItem[] = [];
+
+      for (const {
+        referrer_address,
+        referee_address,
+        start_epoch,
+      } of referrals) {
+        const key = `${referrer_address}-${referee_address}`;
+        // fetch previous epoch cumulative
+        if (start_epoch > 0) {
+          referralEpochMap.push({
+            type: "previous",
+            referrerAddress: referrer_address,
+            refereeAddress: referee_address,
+            epoch: start_epoch - 1,
+          });
+          fetchPromises.push(
+            fetch(
+              `${process.env.INDEXER_URL}/api/v1/pos/reward/${referrer_address}/tnam1q8lhvxys53dlc8wzlg7dyqf9avd0vff6wvav4amt/${
+                start_epoch - 1
+              }`
+            )
+          );
+        }
+        // fetch current epochs
+        for (let epoch = start_epoch; epoch < chainStatus.epoch; epoch++) {
+          referralEpochMap.push({
+            type: "current",
+            referrerAddress: referrer_address,
+            refereeAddress: referee_address,
+            epoch,
+          });
+          fetchPromises.push(
+            fetch(
+              `${process.env.INDEXER_URL}/api/v1/pos/reward/${referrer_address}/tnam1q8lhvxys53dlc8wzlg7dyqf9avd0vff6wvav4amt/${epoch}`
+            )
+          );
+        }
+      }
+
+      const responses = await Promise.all(fetchPromises);
+      const responseData: ResponseData[] = await Promise.all(
+        responses.map(async (res, i) => {
+          if (res.ok) {
+            const data = (await res.json()) as RewardData[];
+            return { ...referralEpochMap[i], data, success: true };
+          }
+          return { ...referralEpochMap[i], data: null, success: false };
+        })
+      );
+
+      // build cumulative map
+      responseData.forEach((r) => {
+        if (!r.success || !r.data?.length) return;
+        const key = `${r.referrerAddress}-${r.refereeAddress}`;
+        const amt = new BigNumber(r.data[0].minDenomAmount).dividedBy(1e6);
+        if (!cumByReferral.has(key)) cumByReferral.set(key, {});
+        cumByReferral.get(key)![r.epoch] = {
+          amount: amt,
+          validator: r.data[0].validator,
+        };
+      });
+
+      // compute incremental rewards
       const rewards: ReferralReward[] = [];
+      for (const [key, epochMap] of cumByReferral) {
+        const [referrerAddress, refereeAddress] = key.split("-");
+        const startEpoch = referrals.find(
+          (r) =>
+            r.referrer_address === referrerAddress &&
+            r.referee_address === refereeAddress
+        )!.start_epoch;
+        const epochs = Object.keys(epochMap)
+          .map((n) => +n)
+          .filter((e) => e >= startEpoch)
+          .sort((a, b) => a - b);
 
-      // Process each referral
-      for (const referral of referrals) {
-        const referrerAddress = referral.referrer_address;
-        const refereeAddress = referral.referee_address;
-
-        // Get rewards for each epoch from start_epoch to current epoch
-        for (
-          let epoch = referral.start_epoch;
-          epoch < chainStatus.epoch;
-          epoch++
-        ) {
-          try {
-            const url = `${process.env.INDEXER_URL}/api/v1/pos/reward/${referrerAddress}/tnam1q8lhvxys53dlc8wzlg7dyqf9avd0vff6wvav4amt/${epoch}`;
-
-            const response = await fetch(url);
-
-            if (response.ok) {
-              const data = (await response.json()) as RewardData[];
-
-              if (data && data.length > 0) {
-                const rewardData = data[0];
-
-                // Convert minDenomAmount (uNam) to NAM (1 NAM = 1,000,000 uNam)
-                const amount = new BigNumber(
-                  rewardData.minDenomAmount
-                ).dividedBy(1_000_000);
-
-                rewards.push({
-                  epoch,
-                  referrerAddress,
-                  refereeAddress,
-                  amount,
-                  validator: rewardData.validator,
-                });
-              }
-            } else {
-              console.error(
-                `Failed to fetch rewards for epoch ${epoch} for referrer ${referrerAddress}: ${response.statusText}`
-              );
-            }
-          } catch (error) {
-            console.error(
-              `Error fetching rewards for epoch ${epoch} for referrer ${referrerAddress}:`,
-              error
-            );
+        for (const epoch of epochs) {
+          const curr = epochMap[epoch];
+          const prev = epochMap[epoch - 1];
+          let delta = prev ? curr.amount.minus(prev.amount) : new BigNumber(0);
+          if (!prev || delta.isLessThan(0)) delta = curr.amount;
+          if (delta.isGreaterThan(0)) {
+            rewards.push({
+              epoch,
+              referrerAddress,
+              refereeAddress,
+              amount: delta,
+              validator: curr.validator,
+            });
           }
         }
       }
 
       setRewardsData(rewards);
-
-      // Download CSV automatically
       if (rewards.length > 0) {
-        const csvContent = generateCsvContent(rewards);
-        downloadCsv(csvContent, "referral_rewards.csv");
+        downloadCsv(generateCsvContent(rewards), "referral_rewards.csv");
       }
-
-      // Show modal
       setShowModal(true);
     } catch (error) {
       console.error("Error generating referral sheet:", error);

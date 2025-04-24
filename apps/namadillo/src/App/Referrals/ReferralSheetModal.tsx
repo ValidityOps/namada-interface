@@ -26,7 +26,7 @@ export const ReferralSheetModal = ({
   const [isProcessingPayout, setIsProcessingPayout] = useState(false);
   const [payoutError, setPayoutError] = useState<string | null>(null);
   const [payoutSuccess, setPayoutSuccess] = useState(false);
-  const resultsPerPage = 10;
+  const resultsPerPage = 100;
   const defaultAccount = useAtomValue(defaultAccountAtom);
   const chain = useAtomValue(chainAtom);
   const feeProps = useTransactionFee(["TransparentTransfer"], false);
@@ -187,22 +187,26 @@ export const ReferralSheetModal = ({
     <Modal onClose={onClose}>
       <ModalTransition
         className="relative flex flex-col w-[100vw] sm:w-[95vw] lg:w-[90vw] 2xl:w-[75vw] 
-                   h-[90svh] overflow-auto px-6 pt-3.5 pb-4 bg-neutral-800 text-white rounded-md"
+                   h-[90svh] bg-neutral-800 text-white rounded-md"
       >
-        <i
-          className="cursor-pointer text-white absolute top-1.5 right-6 text-3xl p-1.5 hover:text-yellow z-50"
-          onClick={onClose}
-        >
-          <IoClose />
-        </i>
-        <header className="flex w-full justify-center items-center relative mb-0 text-lg text-medium">
-          Referral Rewards
-        </header>
+        {/* Modal header with fixed position */}
+        <div className="sticky top-0 z-10 bg-neutral-800 px-6 pt-3.5 pb-2 border-b border-neutral-700">
+          <i
+            className="cursor-pointer text-white absolute top-1.5 right-6 text-3xl p-1.5 hover:text-yellow z-50"
+            onClick={onClose}
+          >
+            <IoClose />
+          </i>
+          <header className="flex w-full justify-center items-center relative mb-0 text-lg text-medium">
+            Referral Rewards
+          </header>
+        </div>
 
-        <div className="flex-1 overflow-hidden pt-4">
+        {/* Modal content with scrollable area */}
+        <div className="flex-1 overflow-y-auto px-6 pb-4">
           {rewardsData.length === 0 ?
             <div className="text-center py-4">No rewards found</div>
-          : <div className="flex flex-col gap-6">
+          : <div className="flex flex-col gap-6 py-4">
               {/* Payout Referrals button - separate from tables */}
               <div className="bg-neutral-700 p-6 rounded-md flex flex-col items-center gap-4 my-4 mt-2">
                 <h3 className="text-lg font-semibold text-yellow">
@@ -246,7 +250,7 @@ export const ReferralSheetModal = ({
                 <h3 className="text-lg font-semibold mb-2">
                   Total Rewards by Referrer
                 </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 max-h-[300px] overflow-y-auto pr-2">
                   {Object.entries(totalRewards).map(([address, amount]) => (
                     <div
                       key={address}
@@ -275,11 +279,11 @@ export const ReferralSheetModal = ({
                   ))}
                 </div>
               </div>
-              <div>
+              <div className="bg-neutral-700 p-4 rounded-md">
                 <h3 className="text-lg font-semibold mb-2">Rewards by Epoch</h3>
-                {/* Referrer selector tabs */}
-                <div className="mb-4 border-b border-neutral-600">
-                  <div className="flex overflow-x-auto">
+                {/* Referrer selector tabs with horizontal scroll */}
+                <div className="mb-4 border-b border-neutral-600 overflow-x-auto">
+                  <div className="flex min-w-max">
                     {Object.keys(rewardsByReferrer).map(
                       (referrerAddress, index) => (
                         <button
@@ -298,23 +302,26 @@ export const ReferralSheetModal = ({
                   </div>
                 </div>
 
-                <TableWithPaginator
-                  id="referral-rewards-table"
-                  headers={headers}
-                  renderRow={renderRow}
-                  itemList={paginatedItems}
-                  page={page % resultsPerPage}
-                  pageCount={pageCount}
-                  onPageChange={setPage}
-                  tableProps={{
-                    className: twMerge(
-                      "w-full flex-1 [&_td]:px-3 [&_th]:px-3 [&_td:first-child]:pl-4 [&_td]:h-[64px]",
-                      "[&_td]:font-normal [&_td:last-child]:pr-4 [&_th:first-child]:pl-4 [&_th:last-child]:pr-4",
-                      "[&_td:first-child]:rounded-s-md [&_td:last-child]:rounded-e-md"
-                    ),
-                  }}
-                  headProps={{ className: "text-neutral-500" }}
-                />
+                {/* Table with horizontal scroll wrapper */}
+                <div className="overflow-x-auto">
+                  <TableWithPaginator
+                    id="referral-rewards-table"
+                    headers={headers}
+                    renderRow={renderRow}
+                    itemList={paginatedItems}
+                    page={page % resultsPerPage}
+                    pageCount={pageCount}
+                    onPageChange={setPage}
+                    tableProps={{
+                      className: twMerge(
+                        "w-full min-w-[600px] flex-1 [&_td]:px-3 [&_th]:px-3 [&_td:first-child]:pl-4 [&_td]:h-[64px]",
+                        "[&_td]:font-normal [&_td:last-child]:pr-4 [&_th:first-child]:pl-4 [&_th:last-child]:pr-4",
+                        "[&_td:first-child]:rounded-s-md [&_td:last-child]:rounded-e-md"
+                      ),
+                    }}
+                    headProps={{ className: "text-neutral-500" }}
+                  />
+                </div>
               </div>
             </div>
           }
