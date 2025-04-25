@@ -158,6 +158,9 @@ const TotalCard = ({
   addr: string;
   amount: BigNumber;
 }): JSX.Element => {
+  const validatorCut = amount.multipliedBy(0.05);
+  const referrerCut = validatorCut.multipliedBy(0.25);
+  const toolBuilderCut = referrerCut;
   return (
     <div className="flex flex-col p-3 border border-neutral-600 rounded-md w-[400px]">
       <div className="flex justify-between mb-1 text-sm text-neutral-400">
@@ -179,9 +182,15 @@ const TotalCard = ({
         <span className="font-bold text-green-400">{amount.toFormat(6)}</span>
       </div>
       <div className="flex justify-between">
-        <span className="text-sm text-neutral-400">Total NAM Owed:</span>
+        <span className="text-sm text-neutral-400">Validator Cut:</span>
         <span className="font-bold text-green-400">
-          {amount.multipliedBy(0.05).toFormat(6)}
+          {validatorCut.minus(referrerCut).minus(toolBuilderCut).toFormat(6)}
+        </span>
+      </div>
+      <div className="flex justify-between">
+        <span className="text-sm text-neutral-400">Referrer Cut:</span>
+        <span className="font-bold text-green-400">
+          {referrerCut.toFormat(6)}
         </span>
       </div>
     </div>
