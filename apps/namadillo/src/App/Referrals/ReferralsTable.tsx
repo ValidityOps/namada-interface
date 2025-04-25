@@ -299,7 +299,14 @@ export const ReferralsTable = ({
         rewardsByReferrer[reward.referrerAddress].push(reward);
       });
 
-      setRewardsData(rewards);
+      // Sort rewards by epoch so entries with the same epoch are grouped together
+      const rewardsSortedByEpoch = [...rewards].sort((a, b) => {
+        // First sort by epoch
+        if (a.epoch !== b.epoch) return a.epoch - b.epoch;
+        // Then by referrer address for consistent ordering within the same epoch
+        return a.referrerAddress.localeCompare(b.referrerAddress);
+      });
+      setRewardsData(rewardsSortedByEpoch);
 
       if (rewards.length > 0) {
         // Log data to help troubleshoot generation

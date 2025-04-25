@@ -14,33 +14,51 @@ const generateCsvContent = (rewardsData: ReferralReward[]): string => {
   }
 
   try {
+    // Sort rewards by referee address to group them
+    const sortedRewards = [...rewardsData].sort(
+      (a, b) =>
+        a.refereeAddress.localeCompare(b.refereeAddress) || a.epoch - b.epoch
+    );
+
     // Format each reward as a CSV row and join with Windows-style line breaks (CRLF)
-    const csvData = rewardsData
-      .map((r) => {
-        // Check if we have all required data
-        if (!r || !r.validator) {
-          console.warn("Invalid reward data item", r);
-          return null;
-        }
+    let currentRefereeAddress: string | null = null;
+    const csvRows: string[] = [];
 
-        // Escape any commas in text fields with quotes
-        const validatorName =
-          r.validator.name ?
-            `"${r.validator.name.replace(/"/g, '""')}"`
-          : "Unknown";
+    sortedRewards.forEach((r) => {
+      // Check if we have all required data
+      if (!r || !r.validator) {
+        console.warn("Invalid reward data item", r);
+        return;
+      }
 
-        return [
+      // Add a blank row when referee address changes
+      if (
+        currentRefereeAddress !== null &&
+        currentRefereeAddress !== r.refereeAddress
+      ) {
+        csvRows.push(""); // Add blank row
+      }
+
+      currentRefereeAddress = r.refereeAddress;
+
+      // Escape any commas in text fields with quotes
+      const validatorName =
+        r.validator.name ?
+          `"${r.validator.name.replace(/"/g, '""')}"`
+        : "Unknown";
+
+      csvRows.push(
+        [
           `"${r.referrerAddress}"`,
           `"${r.refereeAddress}"`,
           r.epoch,
           r.amount.toFixed(6),
           validatorName,
-        ].join(",");
-      })
-      .filter(Boolean) // Remove any null entries
-      .join("\r\n");
+        ].join(",")
+      );
+    });
 
-    return headers + csvData;
+    return headers + csvRows.join("\r\n");
   } catch (error) {
     console.error("Error generating CSV content:", error);
     return headers + "Error generating CSV data";
@@ -77,24 +95,58 @@ export const downloadMultiSheetExcel = (
     // First, add a sheet with all rewards combined
     const allRewards = Object.values(rewardsByReferrer).flat();
     if (allRewards.length > 0) {
-      // Convert rewards to array of plain objects for Excel
-      // Force numbers to be strings by converting with explicit toString() to ensure left alignment
-      const allRewardsData = allRewards.map((reward) => ({
-        "Referrer Address": reward.referrerAddress,
-        "Referee Address": reward.refereeAddress,
-        Epoch: String(reward.epoch), // Convert to string to force left alignment
-        "Reward (NAM)": String(reward.amount.toFixed(6)), // Convert to string to force left alignment
-        "Validator Name": reward.validator.name || "Unknown",
-      }));
+      // Sort all rewards by referee address to group them together
+      const sortedAllRewards = [...allRewards].sort(
+        (a, b) =>
+          a.refereeAddress.localeCompare(b.refereeAddress) || a.epoch - b.epoch
+      );
+
+      // Convert rewards to array format with blank rows between referee addresses
+      const allRewardsFormatted: (Record<string, string> | null)[] = [];
+      let currentRefereeAddress: string | null = null;
+
+      sortedAllRewards.forEach((reward) => {
+        // Add a blank row when referee address changes
+        if (
+          currentRefereeAddress !== null &&
+          currentRefereeAddress !== reward.refereeAddress
+        ) {
+          allRewardsFormatted.push(null); // Add blank row
+        }
+
+        currentRefereeAddress = reward.refereeAddress;
+
+        allRewardsFormatted.push({
+          "Referrer Address": reward.referrerAddress,
+          "Referee Address": reward.refereeAddress,
+          Epoch: String(reward.epoch),
+          "Reward (NAM)": String(reward.amount.toFixed(6)),
+          "Validator Name": reward.validator.name || "Unknown",
+        });
+      });
+
+      // Convert to AOA format with null rows becoming empty arrays (blank rows)
+      const headers = [
+        "Referrer Address",
+        "Referee Address",
+        "Epoch",
+        "Reward (NAM)",
+        "Validator Name",
+      ];
+      const dataRows = allRewardsFormatted.map((row) =>
+        row ? Object.values(row) : Array(headers.length).fill("")
+      );
 
       // Create worksheet with formatting options
       const worksheet = XLSX.utils.aoa_to_sheet([
-        Object.keys(allRewardsData[0]), // Headers
-        ...allRewardsData.map((row) => Object.values(row)), // Data rows
+        headers, // Headers
+        ...dataRows, // Data rows with blank rows
       ]);
 
-      // Auto-size columns based on content
-      const columnWidths = fitToColumn(allRewardsData);
+      // Auto-size columns based on content (filter out null entries for fitToColumn)
+      const columnWidths = fitToColumn(
+        allRewardsFormatted.filter(Boolean) as Record<string, unknown>[]
+      );
       worksheet["!cols"] = columnWidths;
 
       XLSX.utils.book_append_sheet(workbook, worksheet, "All Rewards");
@@ -105,27 +157,62 @@ export const downloadMultiSheetExcel = (
       rewardsByReferrer
     )) {
       if (rewards.length > 0) {
-        // Convert rewards to array of plain objects for Excel
-        // Force numbers to be strings to ensure left alignment
-        const referrerRewardsData = rewards.map((reward) => ({
-          "Referrer Address": reward.referrerAddress,
-          "Referee Address": reward.refereeAddress,
-          Epoch: String(reward.epoch), // Convert to string to force left alignment
-          "Reward (NAM)": String(reward.amount.toFixed(6)), // Convert to string to force left alignment
-          "Validator Name": reward.validator.name || "Unknown",
-        }));
+        // Sort rewards by referee address to group them together
+        const sortedRewards = [...rewards].sort(
+          (a, b) =>
+            a.refereeAddress.localeCompare(b.refereeAddress) ||
+            a.epoch - b.epoch
+        );
+
+        // Convert rewards to array format with blank rows between referee addresses
+        const referrerRewardsFormatted: (Record<string, string> | null)[] = [];
+        let currentRefereeAddress: string | null = null;
+
+        sortedRewards.forEach((reward) => {
+          // Add a blank row when referee address changes
+          if (
+            currentRefereeAddress !== null &&
+            currentRefereeAddress !== reward.refereeAddress
+          ) {
+            referrerRewardsFormatted.push(null); // Add blank row
+          }
+
+          currentRefereeAddress = reward.refereeAddress;
+
+          referrerRewardsFormatted.push({
+            "Referrer Address": reward.referrerAddress,
+            "Referee Address": reward.refereeAddress,
+            Epoch: String(reward.epoch),
+            "Reward (NAM)": String(reward.amount.toFixed(6)),
+            "Validator Name": reward.validator.name || "Unknown",
+          });
+        });
 
         // Create worksheet - use shortened address for sheet name
         const shortAddr = shortenAddress(referrerAddress, 8, 4);
 
+        // Convert to AOA format with null rows becoming empty arrays (blank rows)
+        const headers = [
+          "Referrer Address",
+          "Referee Address",
+          "Epoch",
+          "Reward (NAM)",
+          "Validator Name",
+        ];
+        const dataRows = referrerRewardsFormatted.map((row) =>
+          row ? Object.values(row) : Array(headers.length).fill("")
+        );
+
         // Create worksheet with formatting options
         const worksheet = XLSX.utils.aoa_to_sheet([
-          Object.keys(referrerRewardsData[0]), // Headers
-          ...referrerRewardsData.map((row) => Object.values(row)), // Data rows
+          headers, // Headers
+          ...dataRows, // Data rows with blank rows
         ]);
 
-        // Auto-size columns based on content
-        const columnWidths = fitToColumn(referrerRewardsData);
+        // Auto-size columns based on content (filter out null entries for fitToColumn)
+        const columnWidths = fitToColumn(
+          referrerRewardsFormatted.filter(Boolean) as Record<string, unknown>[]
+        );
         worksheet["!cols"] = columnWidths;
 
         XLSX.utils.book_append_sheet(workbook, worksheet, shortAddr);
