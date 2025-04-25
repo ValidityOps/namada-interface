@@ -1,6 +1,9 @@
 export const routes = {
   root: "/",
 
+  // Referrals
+  referrals: "/referrals",
+
   // Staking
   staking: "/staking",
   stakingBondingIncrement: "/staking/bonding/increment",

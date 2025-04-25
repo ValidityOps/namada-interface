@@ -62,7 +62,7 @@ const IncrementBonding = (): JSX.Element => {
   const validatorLink =
     isNamadaAddress(searchParams.get("validator") ?? "") ?
       searchParams.get("validator")
-    : null;
+    : "ValidityOps#1";
   const [filter, setFilter] = useState<string>(validatorLink ?? "");
   const [onlyMyValidators, setOnlyMyValidators] = useState(false);
   const [validatorFilter, setValidatorFilter] =

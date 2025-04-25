@@ -1,6 +1,10 @@
 import { AlphaVersionTopHeader } from "App/Common/AlphaVersionTopHeader";
-import { ReactNode, useState } from "react";
+import { defaultAccountAtom } from "atoms/accounts";
+import { connectedWalletsAtom } from "atoms/integrations";
+import { useAtomValue } from "jotai";
+import { ReactNode, useEffect, useState } from "react";
 import { IoMdClose } from "react-icons/io";
+import { useLocation, useNavigate } from "react-router-dom";
 import { twMerge } from "tailwind-merge";
 import { AppHeader } from "./AppHeader";
 import { BurgerButton } from "./BurgerButton";
@@ -12,6 +16,30 @@ export const AppLayout = ({
   children: ReactNode;
 }): JSX.Element => {
   const [displayNavigation, setDisplayNavigation] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const connectedWallets = useAtomValue(connectedWalletsAtom);
+  const defaultAccount = useAtomValue(defaultAccountAtom);
+
+  useEffect(() => {
+    const queryParams = new URLSearchParams(location.search);
+    const referrerAddress = queryParams.get("referral");
+
+    if (referrerAddress && referrerAddress.startsWith("tnam")) {
+      const userAddress = defaultAccount.data?.address;
+      if (userAddress) {
+        // Store referral address in local storage
+        localStorage.setItem("refereeAddress", userAddress);
+        localStorage.setItem("referrerAddress", referrerAddress);
+
+        // Clear the query parameter from URL
+        queryParams.delete("referral");
+        const newSearch = queryParams.toString();
+        const newPath = location.pathname + (newSearch ? `?${newSearch}` : "");
+        navigate(newPath, { replace: true });
+      }
+    }
+  }, [location, navigate, connectedWallets, defaultAccount]);
 
   return (
     <>

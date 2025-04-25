@@ -21,6 +21,7 @@ import { SubmitVote } from "./Governance/SubmitVote";
 import { ViewJson } from "./Governance/ViewJson";
 import { IbcShieldAll } from "./Ibc/IbcShieldAll";
 import { MoveAssets } from "./Layout/MoveAssets";
+import { Referrals } from "./Referrals/Referrals";
 import { routes } from "./routes";
 import { Advanced } from "./Settings/Advanced";
 import { EnableFeatures } from "./Settings/EnableFeatures";
@@ -59,6 +60,9 @@ export const MainRoutes = (): JSX.Element => {
           element={<App />}
           errorElement={<RouteErrorBoundary />}
         >
+          {/* Referrals */}
+          <Route path={routes.referrals} element={<Referrals />} />
+
           {/* Home */}
           <Route index element={<AccountOverview />} />
 
