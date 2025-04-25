@@ -29,7 +29,7 @@ export const AllValidatorsTable = ({
   initialPage = 0,
 }: AllValidatorsProps): JSX.Element => {
   const validators = useAtomValue(allValidatorsAtom);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [_, setSearchTerm] = useState("");
   const userHasAccount = useUserHasAccount();
 
   const filteredValidators = useValidatorFilter({
