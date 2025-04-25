@@ -39,7 +39,7 @@ export const saveReferralToSupabase = async (
     const referralData = {
       referrer_address: referrerAddress,
       referee_address: refereeAddress,
-      start_epoch: epoch,
+      last_paid_epoch: epoch,
       active: true,
     };
 

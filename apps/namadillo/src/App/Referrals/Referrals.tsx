@@ -6,14 +6,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getReferralsFromSupabase } from "../../utils/supabase";
 import { ReferralsTable } from "./ReferralsTable";
-
-export type Referral = {
-  id: number;
-  referrer_address: string;
-  referee_address: string;
-  start_epoch: number;
-  created_at?: string;
-};
+import { Referral } from "./types";
 
 export const Referrals = (): JSX.Element => {
   const [referrals, setReferrals] = useState<Referral[]>([]);
@@ -71,7 +64,11 @@ export const Referrals = (): JSX.Element => {
         )}
 
         {!loading && !error && referrals.length > 0 && (
-          <ReferralsTable id="referrals-table" referrals={referrals} />
+          <ReferralsTable
+            id="referrals-table"
+            referrals={referrals}
+            resultsPerPage={10}
+          />
         )}
       </div>
     </Panel>

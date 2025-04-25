@@ -43,7 +43,8 @@
     "traverse": "^0.6.9",
     "vite-plugin-checker": "^0.8.0",
     "web-vitals": "^2.1.4",
-    "wonka": "^6.3.4"
+    "wonka": "^6.3.4",
+    "xlsx": "^0.18.5"
   },
   "scripts": {
     "start:proxy": "node ./scripts/startProxies.js",
