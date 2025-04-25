@@ -8,6 +8,14 @@ import { IoClose } from "react-icons/io5";
 import { twMerge } from "tailwind-merge";
 import { ReferralReward } from "./types";
 
+// TODO:
+// - Once we pay a user we need to update their entry in the DB to last_paid_epoch
+// - After this we should send a confirmation email to Paul et al to let them know:
+//   - A user has been paid
+//   - The amount paid
+//   - The address of the user paid
+//   - The epoch at which the user was paid
+
 export const ReferralSheetModal = ({
   rewardsData,
   onClose,
