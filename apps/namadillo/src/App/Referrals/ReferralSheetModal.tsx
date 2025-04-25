@@ -1,19 +1,12 @@
-import { ActionButton, Modal, TableRow, Tooltip } from "@namada/components";
-import { TransparentTransferMsgValue } from "@namada/types";
+import { Modal, TableRow } from "@namada/components";
 import { shortenAddress } from "@namada/utils";
 import { ModalTransition } from "App/Common/ModalTransition";
 import { TableWithPaginator } from "App/Common/TableWithPaginator";
-import { defaultAccountAtom } from "atoms/accounts";
-import { chainAtom, nativeTokenAddressAtom } from "atoms/chain";
-import { createTransparentTransferAtom } from "atoms/transfer/atoms";
 import BigNumber from "bignumber.js";
-import { useTransaction } from "hooks/useTransaction";
-import { useTransactionFee } from "hooks/useTransactionFee";
-import { useAtomValue } from "jotai";
 import { useCallback, useState } from "react";
 import { IoClose } from "react-icons/io5";
 import { twMerge } from "tailwind-merge";
-import { ReferralReward } from "./ReferralsTable";
+import { ReferralReward } from "./types";
 
 export const ReferralSheetModal = ({
   rewardsData,
@@ -22,17 +15,8 @@ export const ReferralSheetModal = ({
   rewardsData: ReferralReward[];
   onClose: () => void;
 }): JSX.Element => {
-  const [page, setPage] = useState(0);
-  const [isProcessingPayout, setIsProcessingPayout] = useState(false);
-  const [payoutError, setPayoutError] = useState<string | null>(null);
-  const [payoutSuccess, setPayoutSuccess] = useState(false);
-  const resultsPerPage = 100;
-  const defaultAccount = useAtomValue(defaultAccountAtom);
-  const chain = useAtomValue(chainAtom);
-  const feeProps = useTransactionFee(["TransparentTransfer"], false);
-  const namTokenAddressQuery = useAtomValue(nativeTokenAddressAtom);
+  const [selectedReferrer, setSelectedReferrer] = useState<string | null>(null);
 
-  // Define table headers
   const headers = [
     "Referrer Address",
     "Referee Address",
@@ -40,293 +24,158 @@ export const ReferralSheetModal = ({
     "Reward (NAM)",
   ];
 
-  const renderRow = useCallback((reward: ReferralReward): TableRow => {
-    return {
-      key: `reward-${reward.referrerAddress}-${reward.refereeAddress}-${reward.epoch}`,
+  const renderRow = useCallback(
+    (r: ReferralReward): TableRow => ({
+      key: `rw-${r.referrerAddress}-${r.refereeAddress}-${r.epoch}`,
       cells: [
-        // Referrer address (truncated for display)
-        <div
-          key="referrer"
-          className="text-left font-medium max-w-[200px] group/tooltip relative"
-        >
-          {shortenAddress(reward.referrerAddress, 10, 6)}
-          <Tooltip className="z-20" position="right">
-            {reward.referrerAddress}
-          </Tooltip>
-        </div>,
-        // Referee address (truncated for display)
-        <div
-          key="referee"
-          className="text-left font-medium max-w-[200px] group/tooltip relative"
-        >
-          {shortenAddress(reward.refereeAddress, 10, 6)}
-          <Tooltip className="z-20" position="right">
-            {reward.refereeAddress}
-          </Tooltip>
-        </div>,
-        // Epoch
-        <div key="epoch" className="text-left font-medium">
-          {reward.epoch}
-        </div>,
-        // Reward amount in NAM
-        <div key="reward" className="text-left font-medium">
-          {reward.amount.toFormat(6)}
-        </div>,
+        <Addr key="ref" value={r.referrerAddress} />,
+        <Addr key="ree" value={r.refereeAddress} />,
+        <div key="ep">{r.epoch}</div>,
+        <div key="amt">{r.amount.toFormat(6)}</div>,
       ],
-    };
-  }, []);
-
-  const paginatedItems = rewardsData.slice(
-    page * resultsPerPage,
-    page * resultsPerPage + resultsPerPage
+    }),
+    []
   );
 
-  const pageCount = Math.ceil(rewardsData.length / resultsPerPage);
-
-  // Calculate total rewards per referrer
-  const totalRewards = rewardsData.reduce(
-    (acc, reward) => {
-      if (!acc[reward.referrerAddress]) {
-        acc[reward.referrerAddress] = BigNumber(0);
-      }
-      acc[reward.referrerAddress] = acc[reward.referrerAddress].plus(
-        reward.amount
-      );
-      return acc;
-    },
-    {} as Record<string, BigNumber>
+  const byReferrer = rewardsData.reduce<Record<string, ReferralReward[]>>(
+    (a, r) => ((a[r.referrerAddress] ??= []).push(r), a),
+    {}
   );
 
-  // Group rewards by referrer address for easier navigation
-  const rewardsByReferrer = rewardsData.reduce(
-    (acc, reward) => {
-      if (!acc[reward.referrerAddress]) {
-        acc[reward.referrerAddress] = [];
-      }
-      acc[reward.referrerAddress].push(reward);
-      return acc;
-    },
-    {} as Record<string, ReferralReward[]>
-  );
+  if (!selectedReferrer && Object.keys(byReferrer).length)
+    setSelectedReferrer(Object.keys(byReferrer)[0]);
 
-  // Setup transaction
-  const { execute: executeBatchTransfer, isPending: isExecutingBatchTransfer } =
-    useTransaction<TransparentTransferMsgValue>({
-      eventType: "TransparentTransfer",
-      createTxAtom: createTransparentTransferAtom,
-      params: [],
-      parsePendingTxNotification: () => ({
-        title: "Referral payout in progress",
-        description: "Your referral payout transaction is being processed",
-      }),
-      parseErrorTxNotification: () => ({
-        title: "Referral payout failed",
-        description: "An error occurred during the batch payment",
-      }),
-      onBroadcasted: () => {
-        setPayoutSuccess(true);
-        setIsProcessingPayout(false);
-      },
-      onError: (error) => {
-        setPayoutError(
-          typeof error === "string" ? error
-          : error instanceof Error ? error.message
-          : "Unknown error"
-        );
-        setIsProcessingPayout(false);
-      },
-    });
+  const rows =
+    selectedReferrer ? (byReferrer[selectedReferrer] ?? []) : rewardsData;
 
-  // Handle payout button click
-  const handlePayoutReferrals = async (): Promise<void> => {
-    try {
-      setIsProcessingPayout(true);
-      setPayoutError(null);
-      setPayoutSuccess(false);
-
-      if (!defaultAccount.data?.address) {
-        throw new Error("No source account available");
-      }
-
-      const sourceAddress = defaultAccount.data.address;
-      // NAM token address - this should be configured appropriately for your environment
-      const tokenAddress = namTokenAddressQuery.data!;
-
-      // Create batch transfer data structure - one per referrer
-      const msgValueData = Object.entries(totalRewards).map(
-        ([referrerAddress, amount]) => ({
-          source: sourceAddress,
-          target: referrerAddress,
-          token: tokenAddress,
-          amount,
-        })
-      );
-
-      const batchProps = [
-        {
-          data: msgValueData,
-        },
-      ];
-
-      // Execute the batch transfer
-      await executeBatchTransfer({
-        params: batchProps,
-        gasConfig: feeProps.gasConfig,
-        account: defaultAccount.data,
-      });
-    } catch (error) {
-      console.error("Payout error:", error);
-      setPayoutError(
-        error instanceof Error ? error.message : "Unknown error occurred"
-      );
-      setIsProcessingPayout(false);
-    }
-  };
+  const totals = rewardsData.reduce<Record<string, BigNumber>>((acc, r) => {
+    const amt = new BigNumber(r.amount); // ensure BigNumber
+    acc[r.referrerAddress] = (acc[r.referrerAddress] ?? new BigNumber(0)).plus(
+      amt
+    );
+    return acc;
+  }, {});
 
   return (
     <Modal onClose={onClose}>
       <ModalTransition
-        className="relative flex flex-col w-[100vw] sm:w-[95vw] lg:w-[90vw] 2xl:w-[75vw] 
-                   h-[90svh] bg-neutral-800 text-white rounded-md"
+        className="relative flex flex-col w-[90vw] max-w-[1200px] h-[90svh]
+                   bg-neutral-800 text-white rounded-md"
       >
-        {/* Modal header with fixed position */}
+        {/* header */}
         <div className="sticky top-0 z-10 bg-neutral-800 px-6 pt-3.5 pb-2 border-b border-neutral-700">
-          <i
-            className="cursor-pointer text-white absolute top-1.5 right-6 text-3xl p-1.5 hover:text-yellow z-50"
+          <IoClose
             onClick={onClose}
-          >
-            <IoClose />
-          </i>
-          <header className="flex w-full justify-center items-center relative mb-0 text-lg text-medium">
-            Referral Rewards
-          </header>
+            className="absolute top-1.5 right-6 text-3xl cursor-pointer hover:text-yellow"
+          />
+          <header className="text-lg text-center">Referral Rewards</header>
         </div>
 
-        {/* Modal content with scrollable area */}
-        <div className="flex-1 overflow-y-auto px-6 pb-4">
-          {rewardsData.length === 0 ?
-            <div className="text-center py-4">No rewards found</div>
-          : <div className="flex flex-col gap-6 py-4">
-              {/* Payout Referrals button - separate from tables */}
-              <div className="bg-neutral-700 p-6 rounded-md flex flex-col items-center gap-4 my-4 mt-2">
-                <h3 className="text-lg font-semibold text-yellow">
-                  Process Payouts
-                </h3>
-                <p className="text-sm text-center max-w-xl">
-                  This will create a batch payment transaction to pay out all
-                  referrers their total rewards. The transaction will be sent to
-                  your Namada extension for approval.
-                </p>
-                {payoutError && (
-                  <div className="text-red-500 text-sm text-center font-medium">
-                    {payoutError}
-                  </div>
-                )}
-                {payoutSuccess && (
-                  <div className="text-green-500 text-sm text-center font-medium">
-                    Payout transaction successfully sent to the blockchain!
-                  </div>
-                )}
-
-                <ActionButton
-                  className="w-fit px-6 py-3 mt-2"
-                  backgroundColor="yellow"
-                  textColor="black"
-                  onClick={handlePayoutReferrals}
-                  disabled={
-                    isProcessingPayout ||
-                    isExecutingBatchTransfer ||
-                    rewardsData.length === 0 ||
-                    !chain.isSuccess ||
-                    !defaultAccount.data
-                  }
-                >
-                  {isProcessingPayout || isExecutingBatchTransfer ?
-                    "Processing..."
-                  : "Payout Referrals"}
-                </ActionButton>
+        {/* body – single scroll */}
+        <div className="flex-1 px-6 py-4 flex flex-col overflow-y-auto">
+          {rows.length === 0 ?
+            <div className="text-center py-8">No rewards found</div>
+          : <>
+              {/* totals */}
+              <div className="bg-neutral-700 p-4 rounded-md mb-4">
+                <h3 className="text-lg font-semibold mb-2">Referrer Total</h3>
+                <div className="grid grid-cols-1 gap-4">
+                  {selectedReferrer && totals[selectedReferrer] && (
+                    <TotalCard
+                      key={selectedReferrer}
+                      addr={selectedReferrer}
+                      amount={totals[selectedReferrer]}
+                    />
+                  )}
+                </div>
               </div>
-              <div className="bg-neutral-700 p-4 rounded-md">
-                <h3 className="text-lg font-semibold mb-2">
-                  Total Rewards by Referrer
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 max-h-[300px] overflow-y-auto pr-2">
-                  {Object.entries(totalRewards).map(([address, amount]) => (
-                    <div
-                      key={address}
-                      className="flex flex-col p-3 border border-neutral-600 rounded-md"
+
+              {/* epoch table */}
+              <div className="bg-neutral-700 p-4 rounded-md flex flex-col flex-1">
+                <h3 className="text-lg font-semibold mb-2">Rewards by Epoch</h3>
+
+                {/* referrer selector */}
+                <div className="mb-4 border-b border-neutral-600 flex flex-wrap">
+                  {Object.keys(byReferrer).map((addr) => (
+                    <button
+                      key={addr}
+                      onClick={() => setSelectedReferrer(addr)}
+                      className={`px-4 py-2 whitespace-nowrap ${
+                        selectedReferrer === addr ?
+                          "border-b-2 border-yellow text-yellow"
+                        : "text-neutral-400"
+                      }`}
                     >
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="text-sm text-neutral-400">
-                          Referrer:
-                        </span>
-                        <div className="group/tooltip relative">
-                          {shortenAddress(address, 10, 6)}
-                          <Tooltip className="z-20" position="right">
-                            {address}
-                          </Tooltip>
-                        </div>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-neutral-400">
-                          Total NAM:
-                        </span>
-                        <span className="font-bold text-green-400">
-                          {amount.toFormat(6)}
-                        </span>
-                      </div>
-                    </div>
+                      {shortenAddress(addr, 6, 4)}
+                    </button>
                   ))}
                 </div>
-              </div>
-              <div className="bg-neutral-700 p-4 rounded-md">
-                <h3 className="text-lg font-semibold mb-2">Rewards by Epoch</h3>
-                {/* Referrer selector tabs with horizontal scroll */}
-                <div className="mb-4 border-b border-neutral-600 overflow-x-auto">
-                  <div className="flex min-w-max">
-                    {Object.keys(rewardsByReferrer).map(
-                      (referrerAddress, index) => (
-                        <button
-                          key={referrerAddress}
-                          className={`px-4 py-2 whitespace-nowrap ${
-                            page === index ?
-                              "border-b-2 border-yellow text-yellow"
-                            : "text-neutral-400"
-                          }`}
-                          onClick={() => setPage(index)}
-                        >
-                          {shortenAddress(referrerAddress, 6, 4)}
-                        </button>
-                      )
-                    )}
-                  </div>
-                </div>
 
-                {/* Table with horizontal scroll wrapper */}
-                <div className="overflow-x-auto">
-                  <TableWithPaginator
-                    id="referral-rewards-table"
-                    headers={headers}
-                    renderRow={renderRow}
-                    itemList={paginatedItems}
-                    page={page % resultsPerPage}
-                    pageCount={pageCount}
-                    onPageChange={setPage}
-                    tableProps={{
-                      className: twMerge(
-                        "w-full min-w-[600px] flex-1 [&_td]:px-3 [&_th]:px-3 [&_td:first-child]:pl-4 [&_td]:h-[64px]",
-                        "[&_td]:font-normal [&_td:last-child]:pr-4 [&_th:first-child]:pl-4 [&_th:last-child]:pr-4",
-                        "[&_td:first-child]:rounded-s-md [&_td:last-child]:rounded-e-md"
-                      ),
-                    }}
-                    headProps={{ className: "text-neutral-500" }}
-                  />
-                </div>
+                <TableWithPaginator
+                  id="rewards-table"
+                  headers={headers}
+                  renderRow={renderRow}
+                  itemList={rows}
+                  page={0}
+                  pageCount={1}
+                  onPageChange={() => {}} /* no-op */
+                  tableProps={{
+                    className: twMerge(
+                      "w-full min-w-[600px] [&_td]:px-3 [&_th]:px-3 [&_td]:h-[64px]",
+                      "[&_td:first-child]:pl-4 [&_td:last-child]:pr-4",
+                      "[&_td:first-child]:rounded-s-md [&_td:last-child]:rounded-e-md"
+                    ),
+                  }}
+                  headProps={{ className: "text-neutral-500" }}
+                />
               </div>
-            </div>
+            </>
           }
         </div>
       </ModalTransition>
     </Modal>
+  );
+};
+
+const Addr = ({ value }: { value: string }): JSX.Element => (
+  <div className="text-left font-medium max-w-[200px] group/tooltip relative">
+    {shortenAddress(value, 10, 6)}
+  </div>
+);
+
+const TotalCard = ({
+  addr,
+  amount,
+}: {
+  addr: string;
+  amount: BigNumber;
+}): JSX.Element => {
+  return (
+    <div className="flex flex-col p-3 border border-neutral-600 rounded-md w-[400px]">
+      <div className="flex justify-between mb-1 text-sm text-neutral-400">
+        <span>Referrer:</span>
+        <div className="text-left font-medium">
+          {shortenAddress(addr, 10, 6)}
+          <button
+            className="p-1 ml-2 bg-neutral-800 rounded text-xs"
+            onClick={() => {
+              navigator.clipboard.writeText(addr);
+            }}
+          >
+            Copy
+          </button>
+        </div>
+      </div>
+      <div className="flex justify-between">
+        <span className="text-sm text-neutral-400">Total NAM Referred:</span>
+        <span className="font-bold text-green-400">{amount.toFormat(6)}</span>
+      </div>
+      <div className="flex justify-between">
+        <span className="text-sm text-neutral-400">Total NAM Owed:</span>
+        <span className="font-bold text-green-400">
+          {amount.multipliedBy(0.05).toFormat(6)}
+        </span>
+      </div>
+    </div>
   );
 };

@@ -174,7 +174,7 @@ export const ReferralsTable = ({
           });
           fetchPromises.push(
             fetch(
-              `${process.env.INDEXER_URL}/api/v1/pos/reward/${referrer_address}/tnam1q8lhvxys53dlc8wzlg7dyqf9avd0vff6wvav4amt/${
+              `${process.env.INDEXER_URL}/api/v1/pos/reward/${referee_address}/tnam1q8lhvxys53dlc8wzlg7dyqf9avd0vff6wvav4amt/${
                 last_paid_epoch - 1
               }`
             )
@@ -198,7 +198,7 @@ export const ReferralsTable = ({
           });
           fetchPromises.push(
             fetch(
-              `${process.env.INDEXER_URL}/api/v1/pos/reward/${referrer_address}/tnam1q8lhvxys53dlc8wzlg7dyqf9avd0vff6wvav4amt/${epoch}`
+              `${process.env.INDEXER_URL}/api/v1/pos/reward/${referee_address}/tnam1q8lhvxys53dlc8wzlg7dyqf9avd0vff6wvav4amt/${epoch}`
             )
           );
         }
