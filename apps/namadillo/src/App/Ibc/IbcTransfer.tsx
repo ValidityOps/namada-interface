@@ -64,7 +64,6 @@ export const IbcTransfer = (): JSX.Element => {
   const { data: enabledAssets, isLoading: isLoadingEnabledAssets } =
     useAtomValue(enabledIbcAssetsDenomFamily(ibcChannels?.namadaChannel));
 
-  // Local State
   const [shielded, setShielded] = useState<boolean>(true);
   const [selectedAssetAddress, setSelectedAssetAddress] = useUrlState(
     params.asset
@@ -175,7 +174,7 @@ export const IbcTransfer = (): JSX.Element => {
 
   return (
     <div className="relative min-h-[600px]">
-      <header className="flex flex-col items-center text-center mb-3 gap-6">
+      <header className="flex flex-col items-center text-center mb-10 gap-6">
         <IbcTopHeader type="ibcToNam" isShielded={shielded} />
         <h2 className="text-lg">IBC Transfer to Namada</h2>
       </header>
