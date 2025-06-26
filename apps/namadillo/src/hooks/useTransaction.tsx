@@ -61,6 +61,14 @@ export type UseTransactionOutput<T> = {
   unknown
 >;
 
+const getNotificationId = <T,>(tx: TransactionPair<T>): string => {
+  const notificationId = createNotificationId(
+    tx.encodedTxData.txs.map((tx) => tx.hash)
+  );
+
+  return notificationId;
+};
+
 export const useTransaction = <T,>({
   params,
   createTxAtom,
@@ -81,10 +89,15 @@ export const useTransaction = <T,>({
   const { mutateAsync: performBuildTx } = useAtomValue(createTxAtom);
 
   // Claim & Stake is the only array of tx kinds. The rest are single tx kinds.
+  const arr = new Array(Math.max(1, params.length));
   const kinds =
     Array.isArray(eventType) ?
-      [...eventType]
-    : new Array(Math.max(1, params.length)).fill(eventType); // Don't display zeroed value when params are not set yet.
+      // **IMPORTANT**
+      // If eventType is an array, we set kinds by multiplying each kind by params length
+      // i.e. (["ClaimRewards", "Bond"] AND params.length == 2) => ["ClaimRewards", "Bond", "ClaimRewards", "Bond"]
+      arr.fill(eventType).flat()
+    : arr.fill(eventType); // Don't display zeroed value when params are not set yet.
+
   const feeProps = useTransactionFee(
     kinds,
     kinds.some((k) => ["ShieldedTransfer", "UnshieldingTransfer"].includes(k))
@@ -96,10 +109,8 @@ export const useTransaction = <T,>({
     tx: TransactionPair<T>,
     notification: PartialNotification
   ): void => {
-    const notificationId =
-      tx.encodedTxData.type === "buildIbcTransfer" ?
-        createNotificationId(tx.encodedTxData.txs[0].innerTxHashes)
-      : createNotificationId(tx.encodedTxData.txs[0].hash);
+    const notificationId = getNotificationId(tx);
+
     dispatchNotification({
       ...notification,
       id: notificationId,
@@ -113,10 +124,7 @@ export const useTransaction = <T,>({
     notification: PartialNotification,
     tx: TransactionPair<T>
   ): void => {
-    const notificationId =
-      tx.encodedTxData.type === "buildIbcTransfer" ?
-        createNotificationId(tx.encodedTxData.txs[0].innerTxHashes)
-      : createNotificationId(tx.encodedTxData.txs[0].hash);
+    const notificationId = getNotificationId(tx);
     dispatchNotification({
       ...notification,
       id: notificationId,
@@ -193,7 +201,7 @@ export const useTransaction = <T,>({
 
         await onBeforeBroadcast?.(transactionPair);
         try {
-          broadcastTxWithEvents(
+          await broadcastTxWithEvents(
             transactionPair.encodedTxData,
             transactionPair.signedTxs,
             transactionPair.encodedTxData.meta?.props,

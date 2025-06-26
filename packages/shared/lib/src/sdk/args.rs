@@ -2,6 +2,9 @@ use std::ops::Deref;
 use std::{path::PathBuf, str::FromStr};
 
 use namada_sdk::address::DecodeError;
+use namada_sdk::args::{
+    TxShieldedSource, TxShieldedTarget, TxTransparentSource, TxTransparentTarget,
+};
 use namada_sdk::borsh::{BorshDeserialize, BorshSerialize};
 use namada_sdk::collections::HashMap;
 use namada_sdk::ibc::core::host::types::identifiers::{ChannelId, PortId};
@@ -489,7 +492,8 @@ pub fn transparent_transfer_tx_args(
     let transfer_msg = TransparentTransferMsg::try_from_slice(transfer_msg)?;
     let TransparentTransferMsg { data } = transfer_msg;
 
-    let mut transfer_data: Vec<args::TxTransparentTransferData> = vec![];
+    let mut sources: Vec<TxTransparentSource> = vec![];
+    let mut targets: Vec<TxTransparentTarget> = vec![];
 
     for transfer in data {
         let source = Address::from_str(&transfer.source)?;
@@ -499,10 +503,15 @@ pub fn transparent_transfer_tx_args(
             DenominatedAmount::from_str(&transfer.amount).expect("Amount to be valid.");
         let amount = InputAmount::Unvalidated(denom_amount);
 
-        transfer_data.push(args::TxTransparentTransferData {
-            source,
-            target,
-            token,
+        sources.push(TxTransparentSource {
+            source: source.clone(),
+            token: token.clone(),
+            amount,
+        });
+
+        targets.push(TxTransparentTarget {
+            target: target.clone(),
+            token: token.clone(),
             amount,
         });
     }
@@ -511,7 +520,8 @@ pub fn transparent_transfer_tx_args(
 
     let args = args::TxTransparentTransfer {
         tx,
-        data: transfer_data,
+        targets,
+        sources,
         tx_code_path: PathBuf::from("tx_transfer.wasm"),
     };
 
@@ -590,7 +600,8 @@ pub fn shielded_transfer_tx_args(
         .transpose()?
         .map(|v| v.0);
 
-    let mut shielded_transfer_data: Vec<args::TxShieldedTransferData> = vec![];
+    let mut sources: Vec<TxShieldedSource> = vec![];
+    let mut targets: Vec<TxShieldedTarget> = vec![];
 
     for shielded_transfer in data {
         let source = PseudoExtendedKey::decode(shielded_transfer.source)?.0;
@@ -600,10 +611,15 @@ pub fn shielded_transfer_tx_args(
             DenominatedAmount::from_str(&shielded_transfer.amount).expect("Amount to be valid.");
         let amount = InputAmount::Unvalidated(denom_amount);
 
-        shielded_transfer_data.push(args::TxShieldedTransferData {
+        sources.push(TxShieldedSource {
             source,
+            token: token.clone(),
+            amount,
+        });
+
+        targets.push(TxShieldedTarget {
             target,
-            token,
+            token: token.clone(),
             amount,
         });
     }
@@ -612,11 +628,10 @@ pub fn shielded_transfer_tx_args(
     let bparams = bparams_msg_into_bparams(bparams_msg);
 
     let args = args::TxShieldedTransfer {
-        data: shielded_transfer_data,
         tx,
         tx_code_path: PathBuf::from("tx_transfer.wasm"),
-        // false, we do this manually
-        disposable_signing_key: false,
+        sources,
+        targets,
         gas_spending_key,
     };
 
@@ -662,7 +677,8 @@ pub fn shielding_transfer_tx_args(
     } = shielding_transfer_msg;
     let target = PaymentAddress::from_str(&target)?;
 
-    let mut shielding_transfer_data: Vec<args::TxShieldingTransferData> = vec![];
+    let mut sources: Vec<TxTransparentSource> = vec![];
+    let mut targets: Vec<TxShieldedTarget> = vec![];
 
     for shielding_transfer in data {
         let source = Address::from_str(&shielding_transfer.source)?;
@@ -671,9 +687,15 @@ pub fn shielding_transfer_tx_args(
             DenominatedAmount::from_str(&shielding_transfer.amount).expect("Amount to be valid.");
         let amount = InputAmount::Unvalidated(denom_amount);
 
-        shielding_transfer_data.push(args::TxShieldingTransferData {
-            source,
-            token,
+        sources.push(TxTransparentSource {
+            source: source.clone(),
+            token: token.clone(),
+            amount,
+        });
+
+        targets.push(TxShieldedTarget {
+            target,
+            token: token.clone(),
             amount,
         });
     }
@@ -682,8 +704,8 @@ pub fn shielding_transfer_tx_args(
     let bparams = bparams_msg_into_bparams(bparams_msg);
 
     let args = args::TxShieldingTransfer {
-        data: shielding_transfer_data,
-        target,
+        sources,
+        targets,
         tx,
         tx_code_path: PathBuf::from("tx_transfer.wasm"),
     };
@@ -707,6 +729,7 @@ pub struct UnshieldingTransferMsg {
     gas_spending_key: Option<String>,
     bparams: Option<Vec<BparamsMsg>>,
 }
+
 /// Maps serialized tx_msg into TxUnshieldingTransfer args.
 ///
 /// # Arguments
@@ -735,7 +758,9 @@ pub fn unshielding_transfer_tx_args(
         .map(PseudoExtendedKey::decode)
         .transpose()?
         .map(|v| v.0);
-    let mut unshielding_transfer_data: Vec<args::TxUnshieldingTransferData> = vec![];
+
+    let mut sources: Vec<TxShieldedSource> = vec![];
+    let mut targets: Vec<TxTransparentTarget> = vec![];
 
     for unshielding_transfer in data {
         let target = Address::from_str(&unshielding_transfer.target)?;
@@ -744,9 +769,15 @@ pub fn unshielding_transfer_tx_args(
             DenominatedAmount::from_str(&unshielding_transfer.amount).expect("Amount to be valid.");
         let amount = InputAmount::Unvalidated(denom_amount);
 
-        unshielding_transfer_data.push(args::TxUnshieldingTransferData {
-            target,
-            token,
+        sources.push(TxShieldedSource {
+            source,
+            token: token.clone(),
+            amount,
+        });
+
+        targets.push(TxTransparentTarget {
+            target: target.clone(),
+            token: token.clone(),
             amount,
         });
     }
@@ -755,12 +786,10 @@ pub fn unshielding_transfer_tx_args(
     let bparams = bparams_msg_into_bparams(bparams_msg);
 
     let args = args::TxUnshieldingTransfer {
-        data: unshielding_transfer_data,
-        source,
+        sources,
+        targets,
         tx,
         gas_spending_key,
-        // false, we do this manually
-        disposable_signing_key: false,
         tx_code_path: PathBuf::from("tx_transfer.wasm"),
     };
 
@@ -831,6 +860,7 @@ impl IbcTransferMsg {
 pub fn ibc_transfer_tx_args(
     ibc_transfer_msg: &[u8],
     tx_msg: &[u8],
+    native_token: Address,
 ) -> Result<(args::TxIbcTransfer, Option<StoredBuildParams>), JsError> {
     let ibc_transfer_msg = IbcTransferMsg::try_from_slice(ibc_transfer_msg)?;
     let IbcTransferMsg {
@@ -858,11 +888,21 @@ pub fn ibc_transfer_tx_args(
     }?;
 
     let token = Address::from_str(&token)?;
-    let amount = Amount::from_str(&amount_in_base_denom, 0u8).expect("Amount to be valid.");
+
+    // As the value we get is always in the base denom, we can use from_string_precise to get the
+    // amount and drop denom info
+    let amount = Amount::from_string_precise(&amount_in_base_denom).expect("Amount to be valid.");
+
+    let denominated_amount = if token == native_token {
+        DenominatedAmount::native(amount)
+    } else {
+        DenominatedAmount::new(amount, 0u8.into())
+    };
+
     // Using InputAmount::Validated because the amount is already in the base
     // denom. If Unvalidated is used, the SDK will change the denom based on the
     // token address, which complicates knowing which amount to pass to this function.
-    let amount = InputAmount::Validated(amount.into());
+    let amount = InputAmount::Validated(denominated_amount);
     let port_id = PortId::from_str(&port_id).expect("Port id to be valid");
     let channel_id = ChannelId::from_str(&channel_id).expect("Channel id to be valid");
     let ibc_shielding_data = match shielding_data {
@@ -900,8 +940,6 @@ pub fn ibc_transfer_tx_args(
         channel_id,
         timeout_height,
         timeout_sec_offset,
-        // false, we do this manually
-        disposable_signing_key: false,
         tx_code_path: PathBuf::from("tx_ibc.wasm"),
         refund_target,
         // We do not support ibc unshielding for now
@@ -1052,8 +1090,6 @@ fn tx_msg_into_args(tx_msg: &[u8]) -> Result<args::Tx, JsError> {
         output_folder: None,
         expiration,
         chain_id: Some(ChainId(chain_id)),
-        signatures: vec![],
-        wrapper_signature: None,
         signing_keys,
         tx_reveal_code_path: PathBuf::from("tx_reveal_pk.wasm"),
         use_device: false,

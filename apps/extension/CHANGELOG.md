@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.8.1](https://github.com/anoma/namada-interface/compare/extension@v0.8.0...extension@v0.8.1) (2025-06-19)
+
+
+### Bug Fixes
+
+* Extension sliced address ([#2169](https://github.com/anoma/namada-interface/issues/2169)) ([901cdfa](https://github.com/anoma/namada-interface/commit/901cdfaab5bf496537a69ee96cfe4fb7c69cb5a8))
+* Use correct derivation path for masp signs using ledger AND sign all sapling inputs ([#2163](https://github.com/anoma/namada-interface/issues/2163)) ([96539ed](https://github.com/anoma/namada-interface/commit/96539ed2f9e06752e7cb595ab9029e5237c46c1b))
+
+## [0.8.0](https://github.com/anoma/namada-interface/compare/extension@v0.7.0...extension@v0.8.0) (2025-06-10)
+
+
+### Features
+
+* Keychain - Increase session timeout from 5 to 30 minutes ([#2122](https://github.com/anoma/namada-interface/issues/2122)) ([243c013](https://github.com/anoma/namada-interface/commit/243c013356059cc7723b39ff2d60265b57b35cd1))
+
+## [0.7.0](https://github.com/anoma/namada-interface/compare/extension@v0.6.0...extension@v0.7.0) (2025-06-07)
+
+
+### Features
+
+* Mark Ledger accounts missing shielded account as outdated ([#2099](https://github.com/anoma/namada-interface/issues/2099)) ([ddb2f5c](https://github.com/anoma/namada-interface/commit/ddb2f5cb568a20a8dc94110ec81adf59d39e2f78))
+
 ## [0.6.0](https://github.com/anoma/namada-interface/compare/extension@v0.5.0...extension@v0.6.0) (2025-04-18)
 
 

@@ -117,8 +117,7 @@ const Toast = ({ notification, onClose }: ToastProps): JSX.Element => {
       >
         <strong className="block text-sm">{notification.title}</strong>
         <div className="leading-tight text-xs">{notification.description}</div>
-        {notification.type !== "partialSuccess" &&
-          notification.type !== "error" &&
+        {notification.type !== "error" &&
           notification.details &&
           !viewDetails && (
             <button
@@ -129,10 +128,10 @@ const Toast = ({ notification, onClose }: ToastProps): JSX.Element => {
             </button>
           )}
         {notification.details &&
-          (viewDetails ||
-            notification.type === "partialSuccess" ||
-            notification.type === "error") && (
-            <div className="w-full text-xs text-white block">
+          (viewDetails || notification.type === "error") && (
+            <div className="w-full text-xs text-white block whitespace-pre-wrap">
+              {/* We "prefix" the error message with a line break to make it more visible */}
+              {notification.type === "error" && <br />}
               {notification.details}
             </div>
           )}

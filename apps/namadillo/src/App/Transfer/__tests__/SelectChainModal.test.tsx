@@ -1,4 +1,4 @@
-import { Chains } from "@chain-registry/types";
+import { Chain } from "@chain-registry/types";
 import { fireEvent, render, screen } from "@testing-library/react";
 import {
   namadaChainMock,
@@ -14,7 +14,7 @@ describe("Component: SelectChainModal", () => {
   it("should render component and list of chains correctly", () => {
     render(
       <SelectChainModal
-        chains={mockChains as Chains}
+        chains={mockChains as Chain[]}
         onClose={jest.fn()}
         onSelect={jest.fn()}
         wallet={walletMock}
@@ -24,9 +24,12 @@ describe("Component: SelectChainModal", () => {
     expect(screen.getByText("Namada")).toBeInTheDocument();
     expect(screen.getByText("TestChain")).toBeInTheDocument();
 
-    // Beginning and end of wallet address
-    expect(screen.getByText("cosmos1x", { exact: false })).toBeInTheDocument();
-    expect(screen.getByText("jqgh", { exact: false })).toBeInTheDocument();
+    // Truncated wallet address
+    expect(
+      screen.getByText("cosmos1x...yf0wjqgh", {
+        exact: false,
+      })
+    ).toBeInTheDocument();
 
     // Check for modal title
     expect(screen.getByText("Select Source Chain")).toBeInTheDocument();
@@ -46,7 +49,7 @@ describe("Component: SelectChainModal", () => {
       <SelectChainModal
         onClose={jest.fn()}
         onSelect={handleSelect}
-        chains={mockChains as Chains}
+        chains={mockChains as Chain[]}
         wallet={walletMock}
         walletAddress={mockAddress}
       />

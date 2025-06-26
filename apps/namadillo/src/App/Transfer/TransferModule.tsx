@@ -1,4 +1,4 @@
-import { Chain, Chains } from "@chain-registry/types";
+import { Chain } from "@chain-registry/types";
 import { ActionButton, Stack } from "@namada/components";
 import { mapUndefined } from "@namada/utils";
 import { IconTooltip } from "App/Common/IconTooltip";
@@ -11,7 +11,7 @@ import { useKeychainVersion } from "hooks/useKeychainVersion";
 import { TransactionFeeProps } from "hooks/useTransactionFee";
 import { wallets } from "integrations";
 import { useAtomValue } from "jotai";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { BsQuestionCircleFill } from "react-icons/bs";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -22,7 +22,7 @@ import {
   LedgerAccountInfo,
   WalletProvider,
 } from "types";
-import { filterAvailableAsssetsWithBalance } from "utils/assets";
+import { filterAvailableAssetsWithBalance } from "utils/assets";
 import { checkKeychainCompatibleWithMasp } from "utils/compatibility";
 import { getDisplayGasFee } from "utils/gas";
 import {
@@ -45,12 +45,13 @@ type TransferModuleConfig = {
   walletAddress?: string;
   availableWallets?: WalletProvider[];
   connected?: boolean;
-  availableChains?: Chains;
+  availableChains?: Chain[];
   chain?: Chain;
   isShieldedAddress?: boolean;
   onChangeWallet?: (wallet: WalletProvider) => void;
   onChangeChain?: (chain: Chain) => void;
   onChangeShielded?: (isShielded: boolean) => void;
+  isSyncingMasp?: boolean;
   // Additional information if selected account is a ledger
   ledgerAccountInfo?: LedgerAccountInfo;
 };
@@ -100,6 +101,7 @@ export type TransferModuleProps = {
   currentStatusExplanation?: string;
   completedAt?: Date;
   isShieldedTx?: boolean;
+  isSyncingMasp?: boolean;
   buttonTextErrors?: Partial<Record<ValidationResult, string>>;
   onComplete?: () => void;
 } & (
@@ -119,6 +121,7 @@ type ValidationResult =
   | "NotEnoughBalanceForFees"
   | "KeychainNotCompatibleWithMasp"
   | "CustomAddressNotMatchingChain"
+  | "TheSameAddress"
   | "NoLedgerConnected"
   | "Ok";
 
@@ -126,22 +129,15 @@ type ValidationResult =
 const isValidDestinationAddress = ({
   customAddress,
   chain,
-  shielded,
 }: {
   customAddress: string;
   chain: Chain | undefined;
-  shielded: boolean;
 }): boolean => {
   // Skip validation if no custom address or chain provided
-  if (!customAddress || !chain) return true;
+  if (!customAddress || !chain || !chain.bech32_prefix) return true;
 
   // Check shielded/transparent address requirements for Namada
   if (chain.bech32_prefix === "nam") {
-    // If shielded is required but address is transparent, validation fails
-    if (shielded && isTransparentAddress(customAddress)) return false;
-    // If transparent is required but address is shielded, validation fails
-    if (!shielded && isShieldedAddress(customAddress)) return false;
-    // Valid Namada address that matches transaction type
     return (
       isTransparentAddress(customAddress) || isShieldedAddress(customAddress)
     );
@@ -169,6 +165,7 @@ export const TransferModule = ({
   completedAt,
   onComplete,
   buttonTextErrors = {},
+  isSyncingMasp = false,
   isShieldedTx = false,
 }: TransferModuleProps): JSX.Element => {
   const navigate = useNavigate();
@@ -184,7 +181,7 @@ export const TransferModule = ({
   const [memo, setMemo] = useState<undefined | string>();
   const keychainVersion = useKeychainVersion();
   const chainAssetsMap = useAtomValue(chainAssetsMapAtom);
-  const allUsersAssets = Object.values(chainAssetsMap) ?? [];
+  const chainAssets = Object.values(chainAssetsMap) ?? [];
   const gasConfig = gasConfigProp ?? feeProps?.gasConfig;
 
   const displayGasFee = useMemo(() => {
@@ -192,8 +189,10 @@ export const TransferModule = ({
   }, [gasConfig]);
 
   const availableAssets: AddressWithAssetAndAmountMap = useMemo(() => {
-    return filterAvailableAsssetsWithBalance(source.availableAssets);
+    return filterAvailableAssetsWithBalance(source.availableAssets);
   }, [source.availableAssets]);
+
+  const firstAvailableAsset = Object.values(availableAssets)[0];
 
   const selectedAsset = mapUndefined(
     (address) => source.availableAssets?.[address],
@@ -229,11 +228,12 @@ export const TransferModule = ({
   const validationResult = useMemo((): ValidationResult => {
     if (!source.wallet) {
       return "NoSourceWallet";
+    } else if (source.walletAddress === destination.customAddress) {
+      return "TheSameAddress";
     } else if (
       !isValidDestinationAddress({
         customAddress: destination.customAddress ?? "",
         chain: destination.chain,
-        shielded: isShieldedTx,
       })
     ) {
       return "CustomAddressNotMatchingChain";
@@ -348,24 +348,24 @@ export const TransferModule = ({
     return assetDisplayAmount.gt(feeDisplayAmount);
   }
 
-  const chainAcceptedAssets = useMemo(() => {
+  const filteredAvailableAssets = useMemo(() => {
     // Get available assets that are accepted by the chain
     return Object.values(availableAssets).filter(({ asset }) => {
       if (!source.chain) return true;
-      return allUsersAssets.some(
+      return chainAssets.some(
         (chainAsset) =>
           chainAsset?.symbol.toLowerCase() === asset?.symbol.toLowerCase()
       );
     });
-  }, [availableAssets, source.chain, allUsersAssets]);
+  }, [availableAssets, source.chain, chainAssets]);
 
   const sortedAssets = useMemo(() => {
-    if (!chainAcceptedAssets.length) {
+    if (!filteredAvailableAssets.length) {
       return [];
     }
 
     // Sort filtered assets by amount
-    return [...chainAcceptedAssets].sort(
+    return [...filteredAvailableAssets].sort(
       (
         asset1: AddressWithAssetAndAmount,
         asset2: AddressWithAssetAndAmount
@@ -373,7 +373,7 @@ export const TransferModule = ({
         return asset1.amount.gt(asset2.amount) ? -1 : 1;
       }
     );
-  }, [chainAcceptedAssets]);
+  }, [filteredAvailableAssets]);
 
   const getButtonTextError = (
     id: ValidationResult,
@@ -395,6 +395,8 @@ export const TransferModule = ({
     switch (validationResult) {
       case "NoSourceWallet":
         return getText("Select Wallet");
+      case "TheSameAddress":
+        return getText("Source and destination addresses are the same");
 
       case "NoSourceChain":
       case "NoDestinationChain":
@@ -463,6 +465,12 @@ export const TransferModule = ({
     []
   );
 
+  useEffect(() => {
+    if (!selectedAsset?.asset && firstAvailableAsset) {
+      source.onChangeSelectedAsset?.(firstAvailableAsset?.originalAddress);
+    }
+  }, [firstAvailableAsset]);
+
   return (
     <>
       <section className="max-w-[480px] mx-auto" role="widget">
@@ -476,6 +484,7 @@ export const TransferModule = ({
         >
           <TransferSource
             isConnected={Boolean(source.connected)}
+            isSyncingMasp={isSyncingMasp}
             wallet={source.wallet}
             walletAddress={source.walletAddress}
             asset={selectedAsset?.asset}

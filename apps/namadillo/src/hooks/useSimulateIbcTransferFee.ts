@@ -6,6 +6,7 @@ import { getIbcGasConfig } from "integrations/utils";
 import invariant from "invariant";
 import { createIbcTransferMessage } from "lib/transactions";
 import { AddressWithAsset, ChainRegistryEntry, GasConfig } from "types";
+import { isNamadaAsset } from "utils";
 import { sanitizeAddress } from "utils/address";
 import { sanitizeChannel } from "utils/ibc";
 
@@ -37,6 +38,18 @@ export const useSimulateIbcTransferFee = ({
     queryFn: async () => {
       try {
         const MASP_MEMO_LENGTH = 2356;
+
+        // while Keplr can't accept NAM for fees, and stargate can't simulate the NAM fee,
+        // we use a hardcoded value of "uosmo"
+        const getToken = (): string => {
+          if (isNamadaAsset(selectedAsset?.asset)) {
+            return "uosmo";
+          }
+          return (
+            selectedAsset?.asset.base || registry?.assets.assets[0].base || ""
+          );
+        };
+
         const transferMsg = createIbcTransferMessage(
           sanitizeChannel(channel!),
           // We can't mock sourceAddress because the simulate function requires
@@ -44,20 +57,16 @@ export const useSimulateIbcTransferFee = ({
           sanitizeAddress(sourceAddress!),
           sanitizeAddress(sourceAddress!),
           new BigNumber(1),
-          selectedAsset?.asset.base || registry?.assets.assets[0].base || "",
+          getToken(),
           isShieldedTransfer ? "0".repeat(MASP_MEMO_LENGTH) : ""
         );
 
-        // We might need to tweak this value to get a more accurate gas estimation
-        // Also gas might vary before making the transaction, so we might check that.
-        const additionalPercentage = 1.25;
         const simulatedGas = await simulateIbcTransferGas(
           stargateClient!,
           sourceAddress!,
           transferMsg
         );
-        const estimatedGas = simulatedGas * additionalPercentage;
-        const gasConfig = getIbcGasConfig(registry!, estimatedGas);
+        const gasConfig = getIbcGasConfig(registry!, simulatedGas);
         invariant(gasConfig, "Error: invalid Gas config");
         return gasConfig;
       } catch (err) {

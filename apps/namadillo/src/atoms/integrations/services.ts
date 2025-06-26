@@ -100,6 +100,8 @@ export const getShieldedArgs = async (
 
   const memo = (await workerLink.generateIbcShieldingMemo(msg)).payload;
 
+  worker.terminate();
+
   return {
     receiver: sdk.masp.maspAddress(),
     memo,
@@ -270,7 +272,8 @@ export const updateIbcWithdrawalStatus = async (
   if (!tx.hash) throw new Error("Transaction hash not defined");
 
   const api = getIndexerApi();
-  const response = await api.apiV1IbcTxIdStatusGet(tx.hash);
+  // We have to pass inner hash here to get specific transaction status
+  const response = await api.apiV1IbcTxIdStatusGet(tx.innerHash);
   const { status } = response.data;
 
   if (status === "success") {
@@ -346,11 +349,11 @@ export const simulateIbcTransferGas = async (
   stargateClient: SigningStargateClient,
   sourceAddress: string,
   transferMsg: MsgTransferEncodeObject,
-  additionalPercentage: number = 0.05
+  additionalPercentage: number = 0.3
 ): Promise<number> => {
   try {
     const estimatedGas = await stargateClient.simulate(
-      sourceAddress!,
+      sourceAddress,
       [transferMsg],
       undefined
     );
@@ -398,6 +401,7 @@ export const transactionTypeToEventName = (
     case "TransparentToTransparent":
       return "TransparentTransfer";
 
+    case "ShieldedToIbc":
     case "TransparentToIbc":
       return "IbcWithdraw";
 

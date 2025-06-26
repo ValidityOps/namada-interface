@@ -17,7 +17,6 @@ import { ClaimableRewardsModalStage } from "./ClaimableRewardsModalStage";
 import { ClaimRewardsSubmitModalStage } from "./ClaimRewardsSubmitModalStage";
 
 export const StakingRewards = (): JSX.Element => {
-  const { onCloseModal } = useModalCloseEvent();
   const { data: account } = useAtomValue(defaultAccountAtom);
   const [rewardsToClaim, setRewardsToClaim] = useState<ClaimRewardsMsgValue[]>(
     []
@@ -29,6 +28,7 @@ export const StakingRewards = (): JSX.Element => {
     data: rewards,
     isSuccess: successfullyLoadedRewards,
   } = useAtomValue(claimableRewardsAtom);
+  const { onCloseModal } = useModalCloseEvent();
 
   const parseStakingRewardsParams = (
     rewards: AddressBalance
@@ -72,7 +72,7 @@ export const StakingRewards = (): JSX.Element => {
     params: rewardsToClaim,
     eventType: ["ClaimRewards", "Bond"],
     parsePendingTxNotification: () => ({
-      title: "Claim rewards transaction is in progress",
+      title: "Claim and stake rewards transaction is in progress",
       description: (
         <>
           Your rewards claim is being processed and will be staked to the same
@@ -91,11 +91,11 @@ export const StakingRewards = (): JSX.Element => {
     return "Confirm Claim";
   }, [shouldClaimAndStake, rewardsToClaim]);
 
-  const onSubmitClaim = (): void => {
+  const onSubmitClaim = async (): Promise<void> => {
     if (shouldClaimAndStake) {
-      claimRewardsAndStake();
+      await claimRewardsAndStake();
     } else {
-      claimRewards();
+      await claimRewards();
     }
   };
 

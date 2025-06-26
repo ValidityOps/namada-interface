@@ -53,6 +53,7 @@ export const fetchMaspRewards = async (): Promise<MaspAssetRewards[]> => {
       const asset = findAssetByDenom(denom) ?? unknownAsset(denom);
       return {
         asset,
+        address: r.address,
         kdGain: new BigNumber(r.kdGain),
         kpGain: new BigNumber(r.kpGain),
         lockedAmountTarget: new BigNumber(r.lockedAmountTarget),
@@ -60,4 +61,22 @@ export const fetchMaspRewards = async (): Promise<MaspAssetRewards[]> => {
       };
     });
   return existingRewards;
+};
+
+export const fetchBlockHeightByTimestamp = async (
+  api: DefaultApi,
+  timestamp: number
+): Promise<number> => {
+  const timestampInSeconds = Math.floor(timestamp / 1000);
+  const response = await api.apiV1BlockTimestampValueGet(timestampInSeconds);
+
+  return Number(response.data.height);
+};
+
+export const fetchBlockTimestampByHeight = async (
+  api: DefaultApi,
+  height: number
+): Promise<number> => {
+  const response = await api.apiV1BlockHeightValueGet(height);
+  return Number(response.data.timestamp);
 };

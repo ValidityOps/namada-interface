@@ -28,6 +28,9 @@ import {
   persistDisposableSigner,
 } from "atoms/transfer/services";
 import BigNumber from "bignumber.js";
+import * as osmosis from "chain-registry/mainnet/osmosis";
+import { useFathomTracker } from "hooks/useFathomTracker";
+import { useRequiresNewShieldedSync } from "hooks/useRequiresNewShieldedSync";
 import { useTransaction } from "hooks/useTransaction";
 import { useTransactionActions } from "hooks/useTransactionActions";
 import { useUrlState } from "hooks/useUrlState";
@@ -42,10 +45,12 @@ import { generatePath, useNavigate } from "react-router-dom";
 import namadaChainRegistry from "registry/namada.json";
 import { IbcTransferTransactionData, TransferStep } from "types";
 import {
+  isNamadaAsset,
   toBaseAmount,
   toDisplayAmount,
   useTransactionEventListener,
 } from "utils";
+import { IbcTabNavigation } from "./IbcTabNavigation";
 import { IbcTopHeader } from "./IbcTopHeader";
 
 const defaultChainId = "cosmoshub-4";
@@ -60,11 +65,12 @@ export const IbcWithdraw = (): JSX.Element => {
   const namadaChain = useAtomValue(chainAtom);
   const [ledgerStatus, setLedgerStatusStop] = useAtom(ledgerStatusDataAtom);
 
+  const requiresNewShieldedSync = useRequiresNewShieldedSync();
   const [generalErrorMessage, setGeneralErrorMessage] = useState("");
   const [selectedAssetAddress, setSelectedAssetAddress] = useUrlState(
     params.asset
   );
-  const [shielded, setShielded] = useState<boolean>(true);
+  const [shielded, setShielded] = useState<boolean>(!requiresNewShieldedSync);
   const [refundTarget, setRefundTarget] = useState<string>();
   const [amount, setAmount] = useState<BigNumber | undefined>();
   const [customAddress, setCustomAddress] = useState<string>("");
@@ -75,7 +81,7 @@ export const IbcWithdraw = (): JSX.Element => {
   const [txHash, setTxHash] = useState<string | undefined>();
   const [destinationChain, setDestinationChain] = useState<Chain | undefined>();
   const { refetch: genDisposableSigner } = useAtomValue(disposableSignerAtom);
-
+  const alias = shieldedAccount?.alias ?? transparentAccount.data?.alias;
   const chainTokens = useAtomValue(chainTokensAtom);
 
   const { data: availableAssets, isLoading: isLoadingAssets } = useAtomValue(
@@ -83,6 +89,7 @@ export const IbcWithdraw = (): JSX.Element => {
   );
 
   const { storeTransaction } = useTransactionActions();
+  const { trackEvent } = useFathomTracker();
   const navigate = useNavigate();
 
   const ledgerAccountInfo = ledgerStatus && {
@@ -121,7 +128,12 @@ export const IbcWithdraw = (): JSX.Element => {
       if (shielded && refundTarget) {
         await clearDisposableSigner(refundTarget);
       }
+      trackEvent(`${shielded ? "Shielded " : ""}IbcWithdraw: tx complete`);
     }
+  });
+
+  useTransactionEventListener("IbcWithdraw.Error", () => {
+    trackEvent(`${shielded ? "Shielded " : ""}IbcWithdraw: tx error`);
   });
 
   const redirectToTimeline = (): void => {
@@ -130,13 +142,16 @@ export const IbcWithdraw = (): JSX.Element => {
     }
   };
 
-  const updateDestinationChainAndAddress = (chain: Chain | undefined): void => {
+  const updateDestinationChainAndAddress = async (
+    chain: Chain | undefined
+  ): Promise<void> => {
     setDestinationChain(chain);
     if (customAddress) {
       setCustomAddress("");
     }
     if (chain) {
-      loadWalletAddress(chain?.chain_id);
+      await connectToChainId(chain.chain_id);
+      await loadWalletAddress(chain.chain_id);
     }
   };
 
@@ -144,7 +159,7 @@ export const IbcWithdraw = (): JSX.Element => {
     data: ibcChannels,
     isError: unknownIbcChannels,
     isLoading: isLoadingIbcChannels,
-  } = useAtomValue(ibcChannelsFamily(registry?.chain.chain_name));
+  } = useAtomValue(ibcChannelsFamily(destinationChain?.chain_name));
 
   useEffect(() => {
     setSourceChannel(ibcChannels?.namadaChannel || "");
@@ -154,23 +169,26 @@ export const IbcWithdraw = (): JSX.Element => {
   // to other chains different than the original one. Ex: OSMO should only be withdrew to Osmosis,
   // ATOM to Cosmoshub, etc.
   useEffect(() => {
-    if (!selectedAsset || !chainTokens.data) {
-      updateDestinationChainAndAddress(undefined);
-      return;
-    }
+    (async () => {
+      if (!selectedAsset || !chainTokens.data) {
+        await updateDestinationChainAndAddress(undefined);
+        return;
+      }
 
-    const token = chainTokens.data.find(
-      (token) => token.address === selectedAsset.originalAddress
-    );
+      const token = chainTokens.data.find(
+        (token) => token.address === selectedAsset.originalAddress
+      );
 
-    if (token && "trace" in token) {
-      const denom = getDenomFromIbcTrace(token.trace);
-      const chain = searchChainByDenom(denom);
-      updateDestinationChainAndAddress(chain);
-      return;
-    }
+      let chain: Chain | undefined;
+      if (isNamadaAsset(selectedAsset.asset)) {
+        chain = osmosis.chain; // for now, NAM uses the osmosis chain
+      } else if (token && "trace" in token) {
+        const denom = getDenomFromIbcTrace(token.trace);
+        chain = searchChainByDenom(denom);
+      }
 
-    updateDestinationChainAndAddress(undefined);
+      await updateDestinationChainAndAddress(chain);
+    })();
   }, [selectedAsset, chainTokens.data]);
 
   const {
@@ -231,6 +249,7 @@ export const IbcWithdraw = (): JSX.Element => {
         selectedAsset.asset
       );
       setTxHash(ibcTxData.hash);
+      trackEvent(`${shielded ? "Shielded " : ""}IbcWithdraw: tx submitted`);
     },
     onError: async (err, context) => {
       setGeneralErrorMessage(String(err));
@@ -256,10 +275,11 @@ export const IbcWithdraw = (): JSX.Element => {
     invariant(props, "Invalid transaction data");
 
     const transferTransaction: IbcTransferTransactionData = {
-      hash: tx.encodedTxData.txs[0].innerTxHashes[0].toLowerCase(),
+      hash: tx.encodedTxData.txs[0].hash,
+      innerHash: tx.encodedTxData.txs[0].innerTxHashes[0].toLowerCase(),
       currentStep: TransferStep.WaitingConfirmation,
       rpc: "",
-      type: "TransparentToIbc",
+      type: shielded ? "ShieldedToIbc" : "TransparentToIbc",
       status: "pending",
       sourcePort: "transfer",
       asset,
@@ -268,7 +288,7 @@ export const IbcWithdraw = (): JSX.Element => {
       memo: tx.encodedTxData.wrapperTxProps.memo || props.memo,
       displayAmount,
       shielded,
-      sourceAddress: props.source,
+      sourceAddress: shielded ? `${alias} - shielded` : props.source,
       sourceChannel: props.channelId,
       destinationAddress: props.receiver,
       createdAt: new Date(),
@@ -333,10 +353,12 @@ export const IbcWithdraw = (): JSX.Element => {
 
   return (
     <div className="relative min-h-[600px]">
-      <header className="flex flex-col items-center text-center mb-10 gap-6">
+      <header className="flex flex-col items-center text-center mb-8 gap-6">
         <IbcTopHeader type="namToIbc" isShielded={shielded} />
-        <h2 className="text-lg">Withdraw assets from Namada via IBC</h2>
       </header>
+      <div className="mb-6">
+        <IbcTabNavigation />
+      </div>
       <TransferModule
         source={{
           isLoadingAssets,
@@ -352,7 +374,13 @@ export const IbcWithdraw = (): JSX.Element => {
           availableAmount,
           selectedAssetAddress,
           onChangeSelectedAsset: setSelectedAssetAddress,
-          onChangeShielded: setShielded,
+          onChangeShielded: (isShielded) => {
+            if (requiresNewShieldedSync) {
+              setShielded(false);
+            } else {
+              setShielded(isShielded);
+            }
+          },
           amount,
           onChangeAmount: setAmount,
           ledgerAccountInfo,
@@ -388,6 +416,7 @@ export const IbcWithdraw = (): JSX.Element => {
         feeProps={feeProps}
         onComplete={redirectToTimeline}
         completedAt={completedAt}
+        isSyncingMasp={requiresNewShieldedSync}
       />
     </div>
   );

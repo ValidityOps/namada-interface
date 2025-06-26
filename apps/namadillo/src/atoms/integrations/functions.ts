@@ -6,6 +6,9 @@ import { mapUndefined } from "@namada/utils";
 import BigNumber from "bignumber.js";
 import * as celestia from "chain-registry/mainnet/celestia";
 import * as cosmos from "chain-registry/mainnet/cosmoshub";
+import * as neutron from "chain-registry/mainnet/neutron";
+import * as noble from "chain-registry/mainnet/noble";
+import * as nyx from "chain-registry/mainnet/nyx";
 import * as osmosis from "chain-registry/mainnet/osmosis";
 import * as stride from "chain-registry/mainnet/stride";
 import * as celestiaTestnet from "chain-registry/testnet/celestiatestnet3";
@@ -36,6 +39,7 @@ import namadaChain from "@namada/chain-registry/namada/chain.json";
 
 import internalDevnetCosmosTestnetIbc from "@namada/chain-registry/_testnets/_IBC/namadainternaldevnet-cosmoshubtestnet.json";
 
+import { IbcTransition } from "@chain-registry/types/assetlist.schema";
 // TODO: this causes a big increase on bundle size. See #1224.
 import registry from "chain-registry";
 import { searchNamadaTestnetByChainId } from "lib/chain";
@@ -47,16 +51,25 @@ export const namadaTestnetChainList = [
   housefireOldChain,
 ] as Chain[];
 
-registry.chains.push(namadaChain, ...namadaTestnetChainList);
+registry.chains.push(namadaChain as Chain, ...namadaTestnetChainList);
 registry.assets.push(
-  internalDevnetAssets,
-  campfireAssets,
-  housefireAssets,
-  housefireOldAssets,
-  namadaAssets
+  internalDevnetAssets as AssetList,
+  campfireAssets as AssetList,
+  housefireAssets as AssetList,
+  housefireOldAssets as AssetList,
+  namadaAssets as AssetList
 );
 
-const mainnetChains: ChainRegistryEntry[] = [celestia, cosmos, osmosis, stride];
+// This is the array we must update to add new chains and assets
+const mainnetChains: ChainRegistryEntry[] = [
+  celestia,
+  cosmos,
+  osmosis,
+  stride,
+  neutron,
+  noble,
+  nyx,
+];
 const testnetChains: ChainRegistryEntry[] = [
   cosmosTestnet,
   celestiaTestnet,
@@ -108,117 +121,15 @@ const tryDenomToRegistryAsset = (
     return [base, address, ...aliases].includes(denom);
   });
 
-// For a given chain name with a given IBC channel, look up the counterpart
-// chain name that the channel corresponds to.
-// For example, transfer/channel-16 on elystestnet corresponds to
-// cosmoshubtestnet.
-const findCounterpartChainName = (
-  chainName: string,
-  portId: string,
-  channelId: string
-): string | undefined => {
-  return registry.ibc.reduce<string | undefined>((acc, curr: IBCInfo) => {
-    if (typeof acc !== "undefined") {
-      return acc;
-    }
-
-    const tryFindSourceChainName = (
-      ourChainNumber: "chain_1" | "chain_2"
-    ): string | undefined => {
-      if (curr[ourChainNumber].chain_name === chainName) {
-        const match = curr.channels.some((channelEntry) => {
-          const { port_id, channel_id } = channelEntry[ourChainNumber];
-          return port_id === portId && channel_id === channelId;
-        });
-
-        if (match) {
-          const theirChainNumber =
-            ourChainNumber === "chain_1" ? "chain_2" : "chain_1";
-
-          return curr[theirChainNumber].chain_name;
-        }
-      }
-      return undefined;
-    };
-
-    return (
-      tryFindSourceChainName("chain_1") || tryFindSourceChainName("chain_2")
-    );
-  }, undefined);
-};
-
-const tryDenomToIbcAsset = async (
-  denom: string,
-  ibcAddressToDenomTrace: (address: string) => Promise<DenomTrace | undefined>,
-  chainName: string
-): Promise<Asset | undefined> => {
-  const denomTrace = await ibcAddressToDenomTrace(denom);
-  if (typeof denomTrace === "undefined") {
-    return undefined;
-  }
-
-  const { path, baseDenom } = denomTrace;
-
-  const assetOnRegistry = tryDenomToRegistryAsset(
-    baseDenom,
-    registry.assets.map((assetListEl) => assetListEl.assets).flat()
-  );
-
-  if (assetOnRegistry) {
-    return assetOnRegistry;
-  }
-
-  // denom trace path may be something like...
-  // transfer/channel-16/transfer/channel-4353
-  // ...so from here walk the path to find the original chain
-  const pathParts = path.split("/");
-  if (pathParts.length % 2 !== 0) {
-    return undefined;
-  }
-
-  const ibcChannelTrail: { portId: string; channelId: string }[] = [];
-  for (let i = 0; i < pathParts.length; i += 2) {
-    ibcChannelTrail.push({
-      portId: pathParts[i],
-      channelId: pathParts[i + 1],
-    });
-  }
-
-  const originalChainName = ibcChannelTrail.reduce<string | undefined>(
-    (currentChainName, { portId, channelId }) => {
-      if (typeof currentChainName === "undefined") {
-        return undefined;
-      }
-
-      return findCounterpartChainName(currentChainName, portId, channelId);
-    },
-    chainName
-  );
-
-  const originalChainAssets = mapUndefined(assetLookup, originalChainName);
-
-  const originalChainRegistryAsset =
-    originalChainAssets &&
-    tryDenomToRegistryAsset(baseDenom, originalChainAssets);
-
-  return originalChainRegistryAsset || unknownAsset(path + "/" + baseDenom);
-};
-
 const findOriginalAsset = async (
   coin: Coin,
-  assets: Asset[],
-  ibcAddressToDenomTrace: (address: string) => Promise<DenomTrace | undefined>,
-  chainName?: string
+  assets: Asset[]
 ): Promise<AddressWithAssetAndAmount> => {
   const { minDenomAmount, denom } = coin;
   let asset;
 
   if (assets) {
     asset = tryDenomToRegistryAsset(denom, assets);
-  }
-
-  if (!asset && chainName) {
-    asset = await tryDenomToIbcAsset(denom, ibcAddressToDenomTrace, chainName);
   }
 
   if (!asset) {
@@ -230,9 +141,14 @@ const findOriginalAsset = async (
     throw new Error(`Invalid balance: ${minDenomAmount}`);
   }
 
+  const isIbc = asset.traces?.[0].type === "ibc";
+  const path =
+    isIbc ? (asset.traces?.[0] as IbcTransition).chain.path : undefined;
+
   const displayBalance = toDisplayAmount(asset, baseBalance);
   return {
-    originalAddress: denom,
+    // original address is either base for native token or trace(path) for IBC token
+    originalAddress: path || asset.base,
     amount: displayBalance,
     asset,
   };
@@ -244,21 +160,12 @@ export const findChainById = (chainId: string): Chain | undefined => {
 
 export const mapCoinsToAssets = async (
   coins: Coin[],
-  chainId: string,
-  ibcAddressToDenomTrace: (address: string) => Promise<DenomTrace | undefined>
+  chainId: string
 ): Promise<AddressWithAssetAndAmountMap> => {
   const chainName = findChainById(chainId)?.chain_name;
   const assets = mapUndefined(assetLookup, chainName);
   const results = await Promise.allSettled(
-    coins.map(
-      async (coin) =>
-        await findOriginalAsset(
-          coin,
-          assets || [],
-          ibcAddressToDenomTrace,
-          chainName
-        )
-    )
+    coins.map(async (coin) => await findOriginalAsset(coin, assets || []))
   );
 
   const successfulResults = results.reduce<AddressWithAssetAndAmount[]>(
@@ -350,8 +257,9 @@ export const namadaLocalAsset = (tokenAddress: string): AssetList => ({
       {
         ...asset,
         address: tokenAddress,
+        type_asset: asset.type_asset as "sdk.coin",
       }
-    : asset
+    : { ...asset, type_asset: asset.type_asset as "sdk.coin" }
   ),
 });
 
@@ -379,6 +287,9 @@ export const namadaLocalRelayer = (
         ...internalDevnetCosmosTestnetIbc.channels[0].chain_2,
         channel_id: chain2Channel,
       },
+      ordering: internalDevnetCosmosTestnetIbc.channels[0].ordering as
+        | "ordered"
+        | "unordered",
     },
   ],
 });

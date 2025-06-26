@@ -14,6 +14,7 @@ import {
   ibcChannelsFamily,
 } from "atoms/integrations";
 import BigNumber from "bignumber.js";
+import { useFathomTracker } from "hooks/useFathomTracker";
 import { useIbcTransaction } from "hooks/useIbcTransaction";
 import { useTransactionActions } from "hooks/useTransactionActions";
 import { useUrlState } from "hooks/useUrlState";
@@ -27,6 +28,7 @@ import { generatePath, useNavigate } from "react-router-dom";
 import namadaChain from "registry/namada.json";
 import { AddressWithAssetAndAmountMap } from "types";
 import { useTransactionEventListener } from "utils";
+import { IbcTabNavigation } from "./IbcTabNavigation";
 import { IbcTopHeader } from "./IbcTopHeader";
 
 const keplr = new KeplrWalletManager();
@@ -61,9 +63,9 @@ export const IbcTransfer = (): JSX.Element => {
     })
   );
 
+  const { trackEvent } = useFathomTracker();
   const { data: enabledAssets, isLoading: isLoadingEnabledAssets } =
     useAtomValue(enabledIbcAssetsDenomFamily(ibcChannels?.namadaChannel));
-
   const [shielded, setShielded] = useState<boolean>(true);
   const [selectedAssetAddress, setSelectedAssetAddress] = useUrlState(
     params.asset
@@ -86,12 +88,23 @@ export const IbcTransfer = (): JSX.Element => {
 
   const availableAssets = useMemo(() => {
     if (!enabledAssets || !userAssets) return undefined;
+
     const output: AddressWithAssetAndAmountMap = {};
     for (const key in userAssets) {
-      if (enabledAssets.includes(userAssets[key].asset.base)) {
+      const counterpartyBaseDenom =
+        userAssets[key].asset.traces?.[0].counterparty.base_denom || "";
+
+      // We look for both native for chain and in counterparty base denom
+      // TODO/IMPORTANT: this will not work for HOUSEFIRE NAM as it's not a part of
+      // osmosis asset list
+      if (
+        enabledAssets.includes(userAssets[key].asset.base) ||
+        enabledAssets.includes(counterpartyBaseDenom)
+      ) {
         output[key] = { ...userAssets[key] };
       }
     }
+
     return output;
   }, [enabledAssets, userAssets]);
 
@@ -133,7 +146,16 @@ export const IbcTransfer = (): JSX.Element => {
   useTransactionEventListener("IbcTransfer.Success", (e) => {
     if (txHash && e.detail.hash === txHash) {
       setCompletedAt(new Date());
+      trackEvent(
+        `${shielded ? "Shielded " : ""}IbcTransfer: tx complete (${e.detail.asset.symbol})`
+      );
     }
+  });
+
+  useTransactionEventListener("IbcTransfer.Error", (e) => {
+    trackEvent(
+      `${shielded ? "Shielded " : ""}IbcTransfer: tx error (${e.detail.asset.symbol})`
+    );
   });
 
   const onSubmitTransfer = async ({
@@ -154,6 +176,9 @@ export const IbcTransfer = (): JSX.Element => {
       });
       storeTransaction(result);
       setTxHash(result.hash);
+      trackEvent(
+        `${shielded ? "Shielded " : ""}IbcTransfer: tx submitted (${result.asset.symbol})`
+      );
     } catch (err) {
       setGeneralErrorMessage(err + "");
       setCurrentProgress(undefined);
@@ -174,10 +199,12 @@ export const IbcTransfer = (): JSX.Element => {
 
   return (
     <div className="relative min-h-[600px]">
-      <header className="flex flex-col items-center text-center mb-10 gap-6">
+      <header className="flex flex-col items-center text-center mb-8 gap-6">
         <IbcTopHeader type="ibcToNam" isShielded={shielded} />
-        <h2 className="text-lg">IBC Transfer to Namada</h2>
       </header>
+      <div className="mb-6">
+        <IbcTabNavigation />
+      </div>
       <TransferModule
         source={{
           isLoadingAssets: isLoadingBalances || isLoadingEnabledAssets,

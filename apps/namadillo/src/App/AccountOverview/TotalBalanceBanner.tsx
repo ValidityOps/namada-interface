@@ -1,6 +1,6 @@
 import { Panel, SkeletonLoading, Stack, Tooltip } from "@namada/components";
 import { FiatCurrency } from "App/Common/FiatCurrency";
-import { PulsingRing } from "App/Common/PulsingRing";
+import { MaspSyncIndicator } from "App/Layout/MaspSyncIndicator";
 import { shieldedBalanceAtom } from "atoms/balance";
 import { applicationFeaturesAtom } from "atoms/settings";
 import clsx from "clsx";
@@ -26,7 +26,7 @@ export const TotalBalanceBanner = (): JSX.Element => {
     <Panel className="py-4">
       <Stack
         direction="horizontal"
-        className="overflow-hidden items-center justify-between px-4"
+        className="items-center justify-between px-4"
       >
         <div className="text-white">
           <header className="text-sm mb-3">
@@ -49,18 +49,23 @@ export const TotalBalanceBanner = (): JSX.Element => {
             )}
           </header>
           {balanceIsLoading && (
-            <SkeletonLoading height="1em" width="200px" className="text-6xl" />
+            <SkeletonLoading height="1em" width="200px" className="text-5xl" />
           )}
           {balancesHaveLoaded && (
-            <div className={clsx("flex items-center text-7xl leading-none")}>
+            <div className={clsx("flex items-center text-5xl leading-none")}>
               <FiatCurrency amount={totalAmountInFiat} />
               {shouldWaitForShieldedSync && (
-                <span
-                  className="relative text-xs ml-9"
-                  title="Shielded sync in progress..."
-                >
-                  <PulsingRing />
-                </span>
+                <div className="z-30 ml-5">
+                  <MaspSyncIndicator
+                    syncingChildren={
+                      <div className="text-sm text-white leading-normal">
+                        Syncing your shielded assets now. Balances will update
+                        when sync is complete.
+                      </div>
+                    }
+                    syncedChildren={<div>Shielded sync completed</div>}
+                  />
+                </div>
               )}
             </div>
           )}

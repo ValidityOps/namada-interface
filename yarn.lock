@@ -1775,10 +1775,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@chain-registry/types@npm:^0.45.80":
-  version: 0.45.86
-  resolution: "@chain-registry/types@npm:0.45.86"
-  checksum: 10c0/d64508fb536beaf8f83556dcf60421bc685cadd3f9cd88ee2d7996d171b37e46a4bed933829cf0ca94ae3a4d4bd87f9d9289da8f7b8dcfdb4b645cfb7432404c
+"@chain-registry/types@npm:^0.50.160":
+  version: 0.50.160
+  resolution: "@chain-registry/types@npm:0.50.160"
+  checksum: 10c0/7fe89da5609c7e68eedab836738e1616ceaad211fcf0e9f5ee7fd5892fd6bdd6da317b275204b5a8e95ff8ef73640a03677d549a65d47bfeeb851d13194444c9
   languageName: node
   linkType: hard
 
@@ -2713,12 +2713,28 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@emotion/is-prop-valid@npm:1.2.2":
+  version: 1.2.2
+  resolution: "@emotion/is-prop-valid@npm:1.2.2"
+  dependencies:
+    "@emotion/memoize": "npm:^0.8.1"
+  checksum: 10c0/bb1530dcb4e0e5a4fabb219279f2d0bc35796baf66f6241f98b0d03db1985c890a8cafbea268e0edefd5eeda143dbd5c09a54b5fba74cee8c69b98b13194af50
+  languageName: node
+  linkType: hard
+
 "@emotion/is-prop-valid@npm:^1.1.0":
   version: 1.3.1
   resolution: "@emotion/is-prop-valid@npm:1.3.1"
   dependencies:
     "@emotion/memoize": "npm:^0.9.0"
   checksum: 10c0/123215540c816ff510737ec68dcc499c53ea4deb0bb6c2c27c03ed21046e2e69f6ad07a7a174d271c6cfcbcc9ea44e1763e0cf3875c92192f7689216174803cd
+  languageName: node
+  linkType: hard
+
+"@emotion/memoize@npm:^0.8.1":
+  version: 0.8.1
+  resolution: "@emotion/memoize@npm:0.8.1"
+  checksum: 10c0/dffed372fc3b9fa2ba411e76af22b6bb686fb0cb07694fdfaa6dd2baeb0d5e4968c1a7caa472bfcf06a5997d5e7c7d16b90e993f9a6ffae79a2c3dbdc76dfe78
   languageName: node
   linkType: hard
 
@@ -2733,6 +2749,13 @@ __metadata:
   version: 0.8.5
   resolution: "@emotion/stylis@npm:0.8.5"
   checksum: 10c0/f109e3f11cb0d48e8658aaa23578c5bcfe35e297819cfb089a3de6ba8dc0f89b0960474922690c6028df5d2e1895b4967f2fb280642c030054c312f1e137ce26
+  languageName: node
+  linkType: hard
+
+"@emotion/unitless@npm:0.8.1":
+  version: 0.8.1
+  resolution: "@emotion/unitless@npm:0.8.1"
+  checksum: 10c0/a1ed508628288f40bfe6dd17d431ed899c067a899fa293a13afe3aed1d70fac0412b8a215fafab0b42829360db687fecd763e5f01a64ddc4a4b58ec3112ff548
   languageName: node
   linkType: hard
 
@@ -3557,10 +3580,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@namada/chain-registry@npm:^1.0.0":
-  version: 1.1.0
-  resolution: "@namada/chain-registry@npm:1.1.0"
-  checksum: 10c0/5a9d94c1963cf6d9269281fba77a13fa2b3e3a1d8181b02ce628bae14e004a4ebb0ecf6fa901597d7f3e16b7136303d71447fa11ce19d1583d9208e43afd1ed4
+"@namada/chain-registry@npm:^1.3.0":
+  version: 1.3.0
+  resolution: "@namada/chain-registry@npm:1.3.0"
+  checksum: 10c0/4cde05f35e9bbf94bfa18a43e17ba14e04d8517bd32b11918a4b58f9d5a6ed05b1901f4369617efd8adf8dc2647e91148ce53b16ff79206f7b06986a4a8f1bb8
   languageName: node
   linkType: hard
 
@@ -3717,7 +3740,7 @@ __metadata:
     "@types/node-forge": "npm:^1.3.6"
     "@types/react": "npm:^18.3.5"
     "@types/react-dom": "npm:^18.3.0"
-    "@types/styled-components": "npm:^5.1.26"
+    "@types/styled-components": "npm:^5.1.34"
     buffer: "npm:^6.0.3"
     copy-webpack-plugin: "npm:^12.0.2"
     crypto-browserify: "npm:^3.12.0"
@@ -3743,7 +3766,7 @@ __metadata:
     react-dom: "npm:^18.3.0"
     react-router-dom: "npm:^6.0.0"
     style-loader: "npm:^4.0.0"
-    styled-components: "npm:^5.3.5"
+    styled-components: "npm:^6.1.18"
     tailwindcss: "npm:^3.4.1"
     ts-loader: "npm:^9.3.1"
     ts-node: "npm:^10.9.1"
@@ -3826,7 +3849,7 @@ __metadata:
     "@cosmjs/encoding": "npm:^0.32.3"
     "@eslint/js": "npm:^9.9.1"
     "@keplr-wallet/types": "npm:^0.12.136"
-    "@namada/chain-registry": "npm:^1.0.0"
+    "@namada/chain-registry": "npm:^1.3.0"
     "@namada/indexer-client": "npm:3.0.1"
     "@playwright/test": "npm:^1.24.1"
     "@svgr/webpack": "npm:^6.5.1"
@@ -3866,6 +3889,7 @@ __metadata:
     eslint-plugin-import: "npm:^2.30.0"
     eslint-plugin-react: "npm:^7.35.2"
     eslint-plugin-react-hooks: "npm:^4.6.0"
+    fathom-client: "npm:^3.7.2"
     fp-ts: "npm:^2.16.1"
     framer-motion: "npm:^11.3.28"
     globals: "npm:^15.9.0"
@@ -3925,9 +3949,11 @@ __metadata:
     "@dao-xyz/borsh": "npm:^5.1.5"
     "@ledgerhq/hw-transport": "npm:^6.31.4"
     "@ledgerhq/hw-transport-webusb": "npm:^6.29.4"
+    "@namada/shared": "npm:0.3.0"
     "@types/jest": "npm:^29.5.12"
     "@types/node": "npm:^20.11.4"
     "@types/semver": "npm:^7.5.8"
+    "@types/w3c-web-usb": "npm:^1.0.10"
     "@zondax/ledger-namada": "npm:^2.0.0"
     babel-jest: "npm:^29.0.3"
     bignumber.js: "npm:^9.1.1"
@@ -3959,7 +3985,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@namada/shared@workspace:packages/shared":
+"@namada/shared@npm:0.3.0, @namada/shared@workspace:packages/shared":
   version: 0.0.0-use.local
   resolution: "@namada/shared@workspace:packages/shared"
   dependencies:
@@ -5798,7 +5824,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/styled-components@npm:^5.1.22, @types/styled-components@npm:^5.1.26":
+"@types/styled-components@npm:^5.1.22, @types/styled-components@npm:^5.1.26, @types/styled-components@npm:^5.1.34":
   version: 5.1.34
   resolution: "@types/styled-components@npm:5.1.34"
   dependencies:
@@ -5806,6 +5832,13 @@ __metadata:
     "@types/react": "npm:*"
     csstype: "npm:^3.0.2"
   checksum: 10c0/5bce93ea2c6161fc45daaf863eefdc20672e839ae486597c40b95e7978e249c160c1bc9706f56cb5152a7ef63cf485d15a9502889169ef945281f511e4b2d5a0
+  languageName: node
+  linkType: hard
+
+"@types/stylis@npm:4.2.5":
+  version: 4.2.5
+  resolution: "@types/stylis@npm:4.2.5"
+  checksum: 10c0/23f5b35a3a04f6bb31a29d404fa1bc8e0035fcaff2356b4047743a057e0c37b2eba7efe14d57dd2b95b398cea3bac294d9c6cd93ed307d8c0b7f5d282224b469
   languageName: node
   linkType: hard
 
@@ -7828,12 +7861,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"chain-registry@npm:^1.63.100":
-  version: 1.69.89
-  resolution: "chain-registry@npm:1.69.89"
+"chain-registry@npm:^1.69.256":
+  version: 1.69.256
+  resolution: "chain-registry@npm:1.69.256"
   dependencies:
-    "@chain-registry/types": "npm:^0.50.47"
-  checksum: 10c0/99d39e430f8a42d4f034a7052d6239f806cb865e33c771c3aa0a349158a305894671b770fac7b5c1bdcd84109199e5b4ce4a6c6337611f2040a7528f8682972f
+    "@chain-registry/types": "npm:^0.50.160"
+  checksum: 10c0/14cf6ad5398134087661b27a1723bc0a8392fb208a1155b288c776342276b3cf767090eab97871121a33bee64e753934faa2a93f11c51efbdde3cf2dd81419ec
   languageName: node
   linkType: hard
 
@@ -8828,7 +8861,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"css-to-react-native@npm:^3.0.0":
+"css-to-react-native@npm:3.2.0, css-to-react-native@npm:^3.0.0":
   version: 3.2.0
   resolution: "css-to-react-native@npm:3.2.0"
   dependencies:
@@ -8921,7 +8954,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"csstype@npm:^3.0.2":
+"csstype@npm:3.1.3, csstype@npm:^3.0.2":
   version: 3.1.3
   resolution: "csstype@npm:3.1.3"
   checksum: 10c0/80c089d6f7e0c5b2bd83cf0539ab41474198579584fa10d86d0cafe0642202343cbc119e076a0b1aece191989477081415d66c9fefbf3c957fc2fc4b7009f248
@@ -10801,6 +10834,13 @@ __metadata:
   dependencies:
     reusify: "npm:^1.0.4"
   checksum: 10c0/7be87ecc41762adbddf558d24182f50a4b1a3ef3ee807d33b7623da7aee5faecdcc94fce5aa13fe91df93e269f383232bbcdb2dc5338cd1826503d6063221f36
+  languageName: node
+  linkType: hard
+
+"fathom-client@npm:^3.7.2":
+  version: 3.7.2
+  resolution: "fathom-client@npm:3.7.2"
+  checksum: 10c0/f198669fba3aa14c4f1adc2b5afdce282503945fe3ac3d842ab7a6d46c90cf4a703ccad99abcbc71faa095348d9940a2d1aa0cf718c58e4d8479fa5dcb88aff2
   languageName: node
   linkType: hard
 
@@ -15260,10 +15300,10 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "namada@workspace:."
   dependencies:
-    "@chain-registry/types": "npm:^0.45.80"
+    "@chain-registry/types": "npm:^0.50.160"
     "@typescript-eslint/eslint-plugin": "npm:^8.4.0"
     "@typescript-eslint/parser": "npm:^8.4.0"
-    chain-registry: "npm:^1.63.100"
+    chain-registry: "npm:^1.69.256"
     eslint: "npm:^8.57.0"
     git-commit-msg-linter: "npm:^5.0.6"
     husky: "npm:^8.0.3"
@@ -16922,7 +16962,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"postcss@npm:^8.0.0, postcss@npm:^8.4.32, postcss@npm:^8.4.33, postcss@npm:^8.4.35, postcss@npm:^8.4.43, postcss@npm:^8.4.47":
+"postcss@npm:8.4.49, postcss@npm:^8.0.0, postcss@npm:^8.4.32, postcss@npm:^8.4.33, postcss@npm:^8.4.35, postcss@npm:^8.4.43, postcss@npm:^8.4.47":
   version: 8.4.49
   resolution: "postcss@npm:8.4.49"
   dependencies:
@@ -18532,7 +18572,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"shallowequal@npm:^1.1.0":
+"shallowequal@npm:1.1.0, shallowequal@npm:^1.1.0":
   version: 1.1.0
   resolution: "shallowequal@npm:1.1.0"
   checksum: 10c0/b926efb51cd0f47aa9bc061add788a4a650550bbe50647962113a4579b60af2abe7b62f9b02314acc6f97151d4cf87033a2b15fc20852fae306d1a095215396c
@@ -19414,6 +19454,33 @@ __metadata:
   languageName: node
   linkType: hard
 
+"styled-components@npm:^6.1.18":
+  version: 6.1.18
+  resolution: "styled-components@npm:6.1.18"
+  dependencies:
+    "@emotion/is-prop-valid": "npm:1.2.2"
+    "@emotion/unitless": "npm:0.8.1"
+    "@types/stylis": "npm:4.2.5"
+    css-to-react-native: "npm:3.2.0"
+    csstype: "npm:3.1.3"
+    postcss: "npm:8.4.49"
+    shallowequal: "npm:1.1.0"
+    stylis: "npm:4.3.2"
+    tslib: "npm:2.6.2"
+  peerDependencies:
+    react: ">= 16.8.0"
+    react-dom: ">= 16.8.0"
+  checksum: 10c0/067778b8cf9aa24b23590d23210b0e7964c6469630e5ab821c68dac64af6e0c0270c972a836f60a8bbd9753770f0475f911fcd34eeba6bd003c233a79a391e6b
+  languageName: node
+  linkType: hard
+
+"stylis@npm:4.3.2":
+  version: 4.3.2
+  resolution: "stylis@npm:4.3.2"
+  checksum: 10c0/0410e1404cbeee3388a9e17587875211ce2f014c8379af0d1e24ca55878867c9f1ccc7b0ce9a156ca53f5d6e301391a82b0645522a604674a378b3189a4a1994
+  languageName: node
+  linkType: hard
+
 "stylus@npm:^0.62.0":
   version: 0.62.0
   resolution: "stylus@npm:0.62.0"
@@ -20146,6 +20213,13 @@ __metadata:
     minimist: "npm:^1.2.6"
     strip-bom: "npm:^3.0.0"
   checksum: 10c0/09a5877402d082bb1134930c10249edeebc0211f36150c35e1c542e5b91f1047b1ccf7da1e59babca1ef1f014c525510f4f870de7c9bda470c73bb4e2721b3ea
+  languageName: node
+  linkType: hard
+
+"tslib@npm:2.6.2":
+  version: 2.6.2
+  resolution: "tslib@npm:2.6.2"
+  checksum: 10c0/e03a8a4271152c8b26604ed45535954c0a45296e32445b4b87f8a5abdb2421f40b59b4ca437c4346af0f28179780d604094eb64546bee2019d903d01c6c19bdb
   languageName: node
   linkType: hard
 
