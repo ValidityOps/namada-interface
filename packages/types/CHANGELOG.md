@@ -34,6 +34,37 @@
 * Move optional value to end of schema, no empty memo ([#1379](https://github.com/anoma/namada-interface/issues/1379)) ([ee49600](https://github.com/anoma/namada-interface/commit/ee496001aad9291e3bb224f91ac5caf31a1143db))
 * Replace tally type with two fifths ([#1252](https://github.com/anoma/namada-interface/issues/1252)) ([785d9ad](https://github.com/anoma/namada-interface/commit/785d9ad5d6cf7d7abab53ae9cf812fbbfa84b0f7))
 
+## [0.8.0](https://github.com/ValidityOps/namada-interface/compare/types@v0.7.0...types@v0.8.0) (2025-06-26)
+
+
+### Features
+
+* Bump keychain version, update type docs ([#1363](https://github.com/ValidityOps/namada-interface/issues/1363)) ([eece967](https://github.com/ValidityOps/namada-interface/commit/eece96730099ba0d4f5f506c5b4cd2520c82e198))
+* Extension - Add view and import Spending Key ([#1744](https://github.com/ValidityOps/namada-interface/issues/1744)) ([8306f47](https://github.com/ValidityOps/namada-interface/commit/8306f47aefc51bb4da1f5466637f3697ef87dcbf))
+* Force bond in the claim and stake flow ([#1370](https://github.com/ValidityOps/namada-interface/issues/1370)) ([a640415](https://github.com/ValidityOps/namada-interface/commit/a640415a25e7b5b74cf6c37644f81b94b3c56911))
+* Ibc unshielding ([#1920](https://github.com/ValidityOps/namada-interface/issues/1920)) ([2996391](https://github.com/ValidityOps/namada-interface/commit/29963912650c4401cb09163042fb889986e094f6))
+* Improve error message on wasm errors ([#2025](https://github.com/ValidityOps/namada-interface/issues/2025)) ([0f4f046](https://github.com/ValidityOps/namada-interface/commit/0f4f046f2cf2e5f3d4ed712f1ef7f2762f6be79a))
+* Keychain - Display chain name for known chains ([#1968](https://github.com/ValidityOps/namada-interface/issues/1968)) ([ab902e5](https://github.com/ValidityOps/namada-interface/commit/ab902e51564d24c238f1b7b0c0e6ad067decc9e5))
+* Keychain/Namadillo: Payment Address gen ([#1905](https://github.com/ValidityOps/namada-interface/issues/1905)) ([200bd4b](https://github.com/ValidityOps/namada-interface/commit/200bd4b400e36b5b216dc5a2facbe92c56c56b0b))
+* Namadillo - Improve gasLimit error ([#1977](https://github.com/ValidityOps/namada-interface/issues/1977)) ([b965e07](https://github.com/ValidityOps/namada-interface/commit/b965e071b0b3c54b5081a008ae9e08da8680ebdc))
+* Post-release bumps, changelogs ([#1364](https://github.com/ValidityOps/namada-interface/issues/1364)) ([a2f3f5c](https://github.com/ValidityOps/namada-interface/commit/a2f3f5cd54ff4bf905b385dc58a9c5d44c2c4ba4))
+* SDK - Add lookup for TxResponse result codes ([#1946](https://github.com/ValidityOps/namada-interface/issues/1946)) ([54e2562](https://github.com/ValidityOps/namada-interface/commit/54e2562627c3ffbedcd551d42440872d7a8ead18))
+* Unshield + shielded transfers + disposable gas payer ([#1191](https://github.com/ValidityOps/namada-interface/issues/1191)) ([e8f0b39](https://github.com/ValidityOps/namada-interface/commit/e8f0b39452f0b7fac583ee7cb5812409378cfcd0))
+* Update docs in SDK & types ([#1472](https://github.com/ValidityOps/namada-interface/issues/1472)) ([dbcef4f](https://github.com/ValidityOps/namada-interface/commit/dbcef4fa19f0373ae7a328e5c30e1e4dab2b599d))
+* Update Keychain for new modified-zip32 ([#1624](https://github.com/ValidityOps/namada-interface/issues/1624)) ([b19caae](https://github.com/ValidityOps/namada-interface/commit/b19caae391b0411f51ee9b48325eeb62d421e7d3))
+* Update proposal statuses to include executed ([#1904](https://github.com/ValidityOps/namada-interface/issues/1904)) ([843db28](https://github.com/ValidityOps/namada-interface/commit/843db287525e88fb1886ca61414c0b2afe654b82))
+* Vks birthdays ([#1415](https://github.com/ValidityOps/namada-interface/issues/1415)) ([294031d](https://github.com/ValidityOps/namada-interface/commit/294031d8c7bf53c56fc81404b46d6c63ce13b651))
+
+
+### Bug Fixes
+
+* Clean ([6db4178](https://github.com/ValidityOps/namada-interface/commit/6db4178d92c5b6c3e079fbedbf928b71a2dd74ef))
+* Cleanup ([5f9a888](https://github.com/ValidityOps/namada-interface/commit/5f9a8885f94cc11f282776704d79b188277b3711))
+* Decode continuous pgf proposal to ibc target ([#1397](https://github.com/ValidityOps/namada-interface/issues/1397)) ([1faf1f6](https://github.com/ValidityOps/namada-interface/commit/1faf1f685b629e336f6a0aec1d88e6b06029a39e))
+* Move optional value to end of schema, no empty memo ([#1379](https://github.com/ValidityOps/namada-interface/issues/1379)) ([ee49600](https://github.com/ValidityOps/namada-interface/commit/ee496001aad9291e3bb224f91ac5caf31a1143db))
+* Proposal statuses filters ([#2148](https://github.com/ValidityOps/namada-interface/issues/2148)) ([6271ab3](https://github.com/ValidityOps/namada-interface/commit/6271ab3e9c4bbafc851d2f41c7fc399c5d0f8ba4))
+* Proposals checksums and data download ([#1721](https://github.com/ValidityOps/namada-interface/issues/1721)) ([e942a75](https://github.com/ValidityOps/namada-interface/commit/e942a7578e4d8b17898e7c68599883eaa943bde8))
+
 ## [0.7.0](https://github.com/anoma/namada-interface/compare/types@v0.6.0...types@v0.7.0) (2025-06-17)
 
 
